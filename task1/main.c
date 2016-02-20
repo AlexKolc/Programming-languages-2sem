@@ -22,18 +22,18 @@ int main(int argc, const char* argv[])
     while (x1)
     {
         scanf("%d %d %d", &y1, &x2, &y2);
-        /*max = table[x2][y2];
+        max = table[x2][y2];
         size = 0;
         while (max)
         {
             size++;
             max /= 10;
-        }*/
+        }
         for (i = x1; i <= x2; ++i)
         {
             for (j = y1; j <= y2; ++j)
             {
-                printf("%d", /*size + 1,*/ table[i][j]);
+                printf("%d", size + 1, table[i][j]);
             }
             printf("\n");
         }
