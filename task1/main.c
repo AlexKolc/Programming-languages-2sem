@@ -5,9 +5,7 @@ int main(int argc, const char* argv[])
 {
     int n, i, j;
     scanf("%d", &n);
-    /*Выделение памяти под таблицу умножения*/
     int **table = (int **) malloc((n + 1) * sizeof(int *));
-    /*+ заполнение значениями*/
     for (i = 1; i <= n; ++i)
     {
         table[i] = (int *) malloc((n + 1) * sizeof(int));
@@ -16,7 +14,6 @@ int main(int argc, const char* argv[])
             table[i][j] = i * j;
         }
     }
-    /*Выполнение запросов*/
     int x1, y1, x2, y2;
     scanf("%d", &x1);
     while (x1)
@@ -32,7 +29,6 @@ int main(int argc, const char* argv[])
         }
         scanf("%d", &x1);
     }
-    /*освобождение памяти*/
     for (i = 1; i <= n; ++i)
     {
         free(table[i]);
