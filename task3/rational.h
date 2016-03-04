@@ -3,7 +3,7 @@ class rational
     private:
         int n;
         int d;
-        static int gcd(int, int);
+        int gcd(int, int) const;
     public:
         rational(int);
         rational(int, int);
