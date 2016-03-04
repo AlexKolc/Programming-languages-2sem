@@ -8,9 +8,9 @@ rational::rational(int num)
 
 rational::rational(int num, int denom)
 {
-    int gcd = gcd(num, denom);
-    n = num / gcd;
-    d = denom / gcd;
+    int x = gcd(num, denom);
+    n = num / x;
+    d = denom / x;
 }
 
 int rational::getNum() const
