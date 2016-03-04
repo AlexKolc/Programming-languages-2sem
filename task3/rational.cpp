@@ -12,7 +12,7 @@ int gcd(int a, int b)
 
 rational::rational(int i)
 {
-    n = num;
+    n = i;
     d = 1;
 }
 
