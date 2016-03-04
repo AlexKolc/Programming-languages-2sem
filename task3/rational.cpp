@@ -52,7 +52,8 @@ rational rational::operator /(rational const & x) const
     return rational(xNum, xDenom);
 }
 
-int rational::gcd(int a, int b) {
+int rational::gcd(int a, int b) const 
+{
     while (!a && !b)
         if (a > b)
             a %= b;
