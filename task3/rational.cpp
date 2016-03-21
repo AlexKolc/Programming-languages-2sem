@@ -1,6 +1,6 @@
 #include "rational.h"
 
-int rational::simplify(int& a, int& b)
+int rational::simplify(int & a, int & b)
 {
     int x = gcd(a, b);
     a = a / x;
