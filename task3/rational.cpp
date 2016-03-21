@@ -1,6 +1,6 @@
 #include "rational.h"
 
-int gcd(int a, int b) 
+int rational::gcd(int a, int b) 
 {
     while (a && b)
         if (a > b)
