@@ -7,7 +7,6 @@ class rational
         int n;
         int d;
         int gcd(int, int);
-        void simplify(int &, int &);
     public:
         rational(int i);
         rational(int num, int denum);
