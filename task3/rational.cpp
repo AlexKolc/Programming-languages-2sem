@@ -7,7 +7,7 @@ void rational::simplify(int & a, int & b)
     b = b / a;
 }
 
-int rational::gcd(int a, int b) 
+int rational::gcd(int a, int b)
 {
     while (a && b)
         if (a > b)
@@ -27,7 +27,9 @@ rational::rational(int num, int denom)
 {
     n = num;
     d = denom;
-    simplify(n, d);
+    int x = gcd(n, d);
+    n = n / x;
+    d = d / x;
 }
 
 int rational::getNum() const
@@ -45,7 +47,9 @@ rational rational::operator +(rational const & x) const
 {
     int xNum = n * x.d + d * x.n;
     int xDenom = d * x.d;
-    simplify(xNum, xDenom);
+    int x = gcd(xNum, xDenom);
+    xNum = xNum / x;
+    xDenom = xDenom / x;
     return rational(xNum, xDenom);
 }
 
@@ -53,7 +57,9 @@ rational rational::operator -(rational const & x) const
 {
     int xNum = n * x.d - d * x.n;
     int xDenom = d * x.d;
-    simplify(xNum, xDenom);
+    int x = gcd(xNum, xDenom);
+    xNum = xNum / x;
+    xDenom = xDenom / x;
     return rational(xNum, xDenom);
 }
 
@@ -61,7 +67,9 @@ rational rational::operator *(rational const & x) const
 {
     int xNum = n * x.n;
     int xDenom = d * x.d;
-    simplify(xNum, xDenom);
+    int x = gcd(xNum, xDenom);
+    xNum = xNum / x;
+    xDenom = xDenom / x;
     return rational(xNum, xDenom);
 }
 
@@ -69,6 +77,8 @@ rational rational::operator /(rational const & x) const
 {
     int xNum = n * x.d;
     int xDenom = d * x.n;
-    simplify(xNum, xDenom);
+    int x = gcd(xNum, xDenom);
+    xNum = xNum / x;
+    xDenom = xDenom / x;
     return rational(xNum, xDenom);
 }
