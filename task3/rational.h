@@ -6,6 +6,7 @@ class rational
     private:
         int n;
         int d;
+        int gcd(int, int);
     public:
         rational(int i);
         rational(int num, int denum);
