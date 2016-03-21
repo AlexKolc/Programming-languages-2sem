@@ -1,6 +1,6 @@
 #include "rational.h"
 
-int gcd(int a, int b)
+int rational::gcd(int a, int b)
 {
     while (a && b)
         if (a > b)
@@ -25,24 +25,14 @@ rational::rational(int num, int denom)
     d = d / x;
 }
 
-int rational::getNum() const
-{
-    return n;
-}
+int rational::getNum() const { return n; }
 
-int rational::getDenom() const
-{
-    return d;
-}
-
+int rational::getDenom() const { return d; }
 
 rational rational::operator +(rational const & x) const
 {
     int xNum = n * x.d + d * x.n;
     int xDenom = d * x.d;
-    int x = gcd(xNum, xDenom);
-    xNum = xNum / x;
-    xDenom = xDenom / x;
     return rational(xNum, xDenom);
 }
 
@@ -50,9 +40,6 @@ rational rational::operator -(rational const & x) const
 {
     int xNum = n * x.d - d * x.n;
     int xDenom = d * x.d;
-    int x = gcd(xNum, xDenom);
-    xNum = xNum / x;
-    xDenom = xDenom / x;
     return rational(xNum, xDenom);
 }
 
@@ -60,9 +47,6 @@ rational rational::operator *(rational const & x) const
 {
     int xNum = n * x.n;
     int xDenom = d * x.d;
-    int x = gcd(xNum, xDenom);
-    xNum = xNum / x;
-    xDenom = xDenom / x;
     return rational(xNum, xDenom);
 }
 
@@ -70,8 +54,5 @@ rational rational::operator /(rational const & x) const
 {
     int xNum = n * x.d;
     int xDenom = d * x.n;
-    int x = gcd(xNum, xDenom);
-    xNum = xNum / x;
-    xDenom = xDenom / x;
     return rational(xNum, xDenom);
 }
