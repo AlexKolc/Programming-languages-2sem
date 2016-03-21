@@ -1,12 +1,5 @@
 #include "rational.h"
 
-void rational::simplify(int & a, int & b)
-{
-    int x = gcd(a, b);
-    a = a / x;
-    b = b / a;
-}
-
 int rational::gcd(int a, int b)
 {
     while (a && b)
