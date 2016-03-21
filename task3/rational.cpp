@@ -2,12 +2,12 @@
 
 int rational::gcd(int a, int b)
 {
-    while (a != b)
+    while (a && b)
         if (a > b)
-            a -= b;
+            a %= b;
         else
-            b -= a;
-    return a;
+            b %= a;
+    return a + b;
 }
 
 rational::rational(int i)
@@ -29,28 +29,28 @@ int rational::getDenom() const { return d; }
 
 rational rational::operator +(rational const & x) const
 {
-    int xNum = n * x.d + d * x.n;
-    int xDenom = d * x.d;
-    return rational(xNum, xDenom);
+    int xNum1 = getNum();
+    int xDenom1 = getDenom();
+    int xNum2 = x.getNum();
+    int xDenom2 = x.getDenom();
+    return rational(xNum1 * xDenom2 + xDenom1 * xNum2, xDenom1 * xDenom2);
 }
 
 rational rational::operator -(rational const & x) const
 {
-    int xNum = n * x.d - d * x.n;
-    int xDenom = d * x.d;
-    return rational(xNum, xDenom);
+    int xNum1 = getNum();
+    int xDenom1 = getDenom();
+    int xNum2 = x.getNum();
+    int xDenom2 = x.getDenom();
+    return rational(xNum1 * xDenom2 - xDenom1 * xNum2, xDenom1 * xDenom2);
 }
 
 rational rational::operator *(rational const & x) const
 {
-    int xNum = n * x.n;
-    int xDenom = d * x.d;
-    return rational(xNum, xDenom);
+    return rational(getNum() * x.getNum(), getDenom() * x.getDenom());
 }
 
 rational rational::operator /(rational const & x) const
 {
-    int xNum = n * x.d;
-    int xDenom = d * x.n;
-    return rational(xNum, xDenom);
+    return rational(getNum() * x.getDenom(), getDenom() * x.getNum());
 }
