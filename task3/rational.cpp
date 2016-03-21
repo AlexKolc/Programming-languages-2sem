@@ -1,5 +1,12 @@
 #include "rational.h"
 
+int rational::simplify(int& a, int& b)
+{
+    int x = gcd(a, b);
+    a = a / x;
+    b = b / a;
+}
+
 int rational::gcd(int a, int b) 
 {
     while (a && b)
@@ -18,9 +25,9 @@ rational::rational(int i)
 
 rational::rational(int num, int denom)
 {
-    int x = gcd(num, denom);
-    n = num / x;
-    d = denom / x;
+    n = num;
+    d = denom;
+    simplify(n, d);
 }
 
 int rational::getNum() const
@@ -38,6 +45,7 @@ rational rational::operator +(rational const & x) const
 {
     int xNum = n * x.d + d * x.n;
     int xDenom = d * x.d;
+    simplify(xNum, xDenum);
     return rational(xNum, xDenom);
 }
 
@@ -45,6 +53,7 @@ rational rational::operator -(rational const & x) const
 {
     int xNum = n * x.d - d * x.n;
     int xDenom = d * x.d;
+    simplify(xNum, xDenum);
     return rational(xNum, xDenom);
 }
 
@@ -52,6 +61,7 @@ rational rational::operator *(rational const & x) const
 {
     int xNum = n * x.n;
     int xDenom = d * x.d;
+    simplify(xNum, xDenum);
     return rational(xNum, xDenom);
 }
 
@@ -59,5 +69,6 @@ rational rational::operator /(rational const & x) const
 {
     int xNum = n * x.d;
     int xDenom = d * x.n;
+    simplify(xNum, xDenum);
     return rational(xNum, xDenom);
 }
