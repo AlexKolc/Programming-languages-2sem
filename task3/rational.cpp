@@ -45,7 +45,7 @@ rational rational::operator +(rational const & x) const
 {
     int xNum = n * x.d + d * x.n;
     int xDenom = d * x.d;
-    simplify(xNum, xDenum);
+    simplify(xNum, xDenom);
     return rational(xNum, xDenom);
 }
 
@@ -53,7 +53,7 @@ rational rational::operator -(rational const & x) const
 {
     int xNum = n * x.d - d * x.n;
     int xDenom = d * x.d;
-    simplify(xNum, xDenum);
+    simplify(xNum, xDenom);
     return rational(xNum, xDenom);
 }
 
@@ -61,7 +61,7 @@ rational rational::operator *(rational const & x) const
 {
     int xNum = n * x.n;
     int xDenom = d * x.d;
-    simplify(xNum, xDenum);
+    simplify(xNum, xDenom);
     return rational(xNum, xDenom);
 }
 
@@ -69,6 +69,6 @@ rational rational::operator /(rational const & x) const
 {
     int xNum = n * x.d;
     int xDenom = d * x.n;
-    simplify(xNum, xDenum);
+    simplify(xNum, xDenom);
     return rational(xNum, xDenom);
 }
