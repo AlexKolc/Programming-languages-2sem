@@ -7,8 +7,8 @@ private:
     int d;
     int gcd(int, int);
 public:
-    rational(int, int);
-    rational(int);
+    rational(int num, int denom);
+    rational(int num);
     int getNum() const;
     int getDenom() const;
     rational operator +(rational const &x) const;
