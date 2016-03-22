@@ -2,313 +2,213 @@
 #include <stdlib.h>
 #include <string.h>
 
-FILE *file;
-char *fileName;
+FILE *fileBook;
+const char *fileName;
+int ID;
 
-typedef struct Contact
+typedef struct
 {
     int id;
-    char *name, *number;
+    char *name;
+    char *number;
 } Contact;
 
-typedef enum Type
+typedef struct
 {
-    NAME, NUMBER
-} Type;
+    int sizeBook;
+    Contact *human;
+} BookContacts;
 
-typedef struct ContactBook
+BookContacts book;
+
+char *readData(FILE *data);
+void rewrite();
+char *checkData(char *data);
+int find(char *name);
+void create(char *name, char *number);
+void delete(int id);
+void change(int id, char *command, char *newName);
+
+int main(int argc, const char *argv[])
 {
-    Contact *contacts;
-    int size, count;
-} ContactBook;
+    fileName = argv[1];
+    fileBook = fopen(argv[1], "a");
+    book.sizeBook = 0;
+    book.human = malloc(book.sizeBook * sizeof(Contact));
 
-ContactBook book;
-
-char *read(FILE *stream);
-void rewriteBook();
-char *newName(const char *name);
-char *newNumber(const char *number);
-int checkName(const char *name);
-int checkNumber(const char *num);
-int add(char *name, char *number, int myFile);
-void find(char *data);
-int change(int id, Type type, char *data);
-int remove(int id);
-
-int main(int argc, char const *argv[])
-{
-    fileName = (char *) argv[1];
-    book.count = 1;
-    book.size = 0;
-    book.contacts = malloc(0);
-    int id, m = 0;
-    file = fopen(fileName, "a+");
-    rewind(file);
-    while (fscanf(file, "%d", &id) == 1)
+    int id;
+    rewind(fileBook);
+    while (fscanf(fileBook, "%d", &id) == 1)
     {
-        char *name = read(file);
-        char *number = read(file);
-        if (add(name, number, 0)) {
-            book.contacts[book.size - 1].id = id;
-            if (id > m) m = id;
-        }
+        Contact x;
+        x.id = id, x.name = readData(fileBook), x.number = readData(fileBook);
+        book.human = realloc(book.human, (book.sizeBook + 1) * sizeof(Contact));
+        book.human[book.sizeBook++] = x;
     }
-    book.count = ++m;
-    rewriteBook();
-    fprintf(file, "\n");
-    char *command = malloc(10 * sizeof(char));
 
-    while (scanf("%s", command) == 1)
+    if (book.sizeBook)
+        ID = book.human[book.sizeBook - 1].id + 1;
+    else
+        ID = 1;
+
+    char *command = malloc(50 * sizeof(char));
+    char *data, *name, *number;
+    while (scanf("%s", command) > 0)
     {
-        if (!strcmp(command, "create"))
+        if (!strcmp(command, "find"))
         {
-            char *name = read(stdin);
-            char *number = read(stdin);
-            add(name, number, 1);
+            data = readData(stdin);
+            find(data);
         }
-        else if (!strcmp(command, "find"))
-            find(read(stdin));
-        else if (!strcmp(command, "change"))
+        else if (!strcmp(command, "create"))
         {
-            scanf("%d %s", &id, command);
-            char *data = read(stdin);
-            if (!strcmp(command, "name"))
-                change(id, NAME, data);
-            else if (!strcmp(command, "number"))
-                change(id, NUMBER, data);
-            else printf("Error: Unknown this command\n");
+            name = readData(stdin);
+            number = readData(stdin);
+            create(name, number);
         }
         else if (!strcmp(command, "delete"))
         {
             scanf("%d", &id);
-            remove(id);
+            delete(id);
+        }
+        else if (!strcmp(command, "change"))
+        {
+            scanf("%d %s", &id, command);
+            data = readData(stdin);
+            change(id, command, data);
         }
         else if (!strcmp(command, "exit"))
             break;
         else
-            printf("Error: Unknown this command\n");
+            printf("Error: Didn't find command\n");
         fflush(stdout);
     }
-    fclose(file);
-    int i;
-    for (i = 0; i < book.size; i++)
-    {
-        free(book.contacts[i].name);
-        free(book.contacts[i].number);
-    }
-    free(book.contacts);
+
     free(command);
+    free(book.human);
+    fclose(fileBook);
+    return 0;
+
+}
+
+char *readData(FILE *data)
+{
+    getc(data);
+    char *new = malloc(0 * sizeof(char));
+    char this = fgetc(data);
+    int i = 0, j = 0;
+    while (this != ' ' && this != '\n' && this != EOF)
+    {
+        if (i % 128 == 0) new = realloc(new, (j++ * 128) * sizeof(char));
+        new[i++] = this;
+        this = fgetc(data);
+    }
+    new[i] = '\0';
+    ungetc(' ', data);
+    return new;
+}
+
+void rewrite()
+{
+    freopen(fileName, "w", fileBook);
+    int i;
+    for (i = 0; i < book.sizeBook; i++)
+        if (book.human[i].id)
+            fprintf(fileBook, "%d %s %s\n", book.human[i].id, book.human[i].name, book.human[i].number);
+    freopen(fileName, "a", fileBook);
+}
+
+char *checkData(char *data)
+{
+    int i = 0, f;
+    char *newData = malloc(strlen(data) * sizeof(char));
+    if (isalpha(data[0]))
+        f = 1;
+    else
+        f = 0;
+    if (!f)
+    {
+        int j = 0;
+        while (data[i] != '\0')
+        {
+            if (isdigit(data[i]))
+                newData[j++] = data[i];
+            i++;
+        }
+        newData[j] = '\0';
+    }
+    else
+    {
+        while (data[i] != '\0')
+            if (data[i] >= 'A' && data[i] <= 'Z')
+                newData[i] = (char)(data[i++] - 'A' + 'a');
+            else
+                newData[i] = data[i++];
+        data[i] = '\0';
+    }
+    return data;
+}
+
+int find(char *data)
+{
+    int f = 0;
+    data = checkData(data);
+    int i;
+    if (isdigit(data[0]))
+        for (i = 0; i < book.sizeBook; i++)
+            if (!strcmp(checkData(book.human[i].number), data) && book.human[i].id)
+            {
+                printf("%d %s %s\n", book.human[i].id, book.human[i].name, book.human[i].number);
+                f = 1;
+            }
+            else
+                for (i = 0; i < book.sizeBook; i++)
+                    if (strstr(checkData(book.human[i].name), data) && book.human[i].id) {
+                        printf("%d %s %s\n", book.human[i].id, book.human[i].name, book.human[i].number);
+                        f = 1;
+                    }
+    if (!f) printf("Error: Didn't find data\n");
     return 0;
 }
 
-char *read(FILE *str)
+void create(char *name, char *number)
 {
-    int size = 0, mSize = 0;
-    char *arr = malloc(0), c = (char) fgetc(str);
-    while (c == EOF || c == ' ') c = (char)fgetc(str);
-    while (c != EOF && c == ' ')
-    {
-        if (size > mSize - 2)
-        {
-            mSize = size + 1e8;
-            arr = realloc(arr, mSize * sizeof(char));
-        }
-        arr[size++] = c;
-        c = (char)fgetc(str);
-    }
-    arr[size] = '\0';
-    return arr;
+    fprintf(fileBook, "%d %s %s\n", ID + 1, name, number);
+    Contact x;
+    x.id = ID++, x.name = name, x.number = number;
+    book.human = realloc(book.human, (book.sizeBook + 1) * sizeof(Contact));
+    book.human[book.sizeBook++] = x;
 }
 
-void rewriteBook()
+void delete(int id)
 {
-    fflush(file);
-    fclose(file);
-    fopen(fileName, "w");
     int i;
-    for (i = 0; i < book.size; i++)
-        fprintf(file, "%d %s %s\n", book.contacts[i].id, book.contacts[i].name, book.contacts[i].number);
-    fflush(file);
-    fclose(file);
-    fopen(fileName, "a");
+    for (i = 0; i < book.sizeBook; i++)
+        if (book.human[i].id == id) break;
+    if (i != book.sizeBook)
+    {
+        book.human[i].id = 0;
+        rewrite();
+    }
 }
 
-char *newName(const char *name)
+void change(int id, char *command, char *newData)
 {
-    int act = 0;
-    while (name[act++] != '\0');
-    char *newNam = malloc(act * sizeof(char));
-    while (act-- > -1)
-        if (name[act] >= 'A' && name[act] <= 'Z')
-            newNam[act] = (char)(name[act] - 'A' + 'a')
-        else
-            newNam[act] = name[act];
-    return newNam;
-}
-
-char *newNumber(const char *number)
-{
-    int newSize = 0, act = 0, size = 0;
-    while (number[act++] != '\0')
-        if (number[act] >= '0' && number[act] <= '9')
-            newSize++;
-    char *newNum = malloc((newSize + 1) * sizeof(char));
-    act = 0;
-    while (newSize > 0)
-    {
-        if (number[act] >= '0' && number[act] <= '9')
-        {
-            newNum[size++] = number[act];
-            newSize--;
-        }
-        act++;
-    }
-    newNum[act] = '\0';
-    return newNum;
-}
-
-int checkName(const char *name)
-{
-    int act = 0;
-    char *newNam = newName(name);
-    while (newNam[act++] != '\0')
-        if (newNam[act] < 'a' || newNam[act] > 'z')
-            return 0;
-    return 1;
-}
-
-int checkNumber(const char *num)
-{
-    int count = 0, braces = 0, dash = 0, digits = 0;
-    int act = (num[0] != '+') ? 0 : 1;
-    while (num[act++] != '\0')
-    {
-        if ((num[act] < '0' || num[act] > '9')
-        return 0;
-        else if (num[act] == '(' && !count && !braces)
-            return 0;
-        else if (num[act] == ')' && braces)
-            return 0;
-        else if (num[act] == '-' && !prev_is_dash)
-            return 0;
-        if (num[act] >= '0' && num[act] <= 9)
-            digits++;
-        else if (num[act] == '(')
-            braces = 1;
-        else if (num[act] == ')')
-        {
-            braces = 0;
-            count++;
-        }
-        else if (num[act] == '-')
-            dash = 1;
-        else
-            dash = 0;
-    }
-    if (braces || !digits || count > 1) return 0;
-    return 1;
-}
-
-int add(char *name, char *number, int myFile)
-{
-    if (!checkName(name))
-    {
-        if (myFile) printf("Error: Name must con only letters a-z, A-Z\n");
-        return 0;
-    }
-    if (!checkNumber(number))
-    {
-        if (myFile) printf("Error: Number must contains only digits 0-9 and symbols +, -, (, )\n");
-        return 0;
-    }
-    book.contacts = realloc(book.contacts, (book.size + 1) * sizeof(Contact));
-    book.contacts[book.size].id = book.count++;
-    book.contacts[book.size].name = name;
-    book.contacts[book.size++].number = number;
-    if (myFile)
-    {
-        fprintf(file, "%d %s %s\n", book.count - 1, name, number);
-        fflush(file);
-    }
-    return 1;
-}
-
-void find(char *data)
-{
-    if (!checkName(data) && !checkNumber(data))
-    {
-        printf("Error: Name must contains only letters a-z, A-Z.\n"
-                       "       Number must contains only digits 0-9 and symbols +, -, (, )\n");
-        return;
-    }
-    int act = 0, found = 0;
-    char *newNam = newName(data), *newNum = newNumber(data);
-    while (act++ < book.size)
-    {
-        if (strstr(newName(book.contacts[act].name), newNam) ||
-            !strcmp(newNumber(book.contacts[act].number), newNum))
-        {
-            printf("%d %s %s\n", book.contacts[act].id, book.contacts[act].name, book.contacts[act].number);
-            found++;
-        }
-    }
-    if (!found) printf("Error: Didn't found\n");
-    free(newNam);
-    free(newNum);
-}
-
-int change(int id, Type type, char *data)
-{
-    if (type == NAME && !checkName(data))
-    {
-        printf("Error: Name must contains only letters a-z, A-Z\n");
-        return 0;
-    }
-    if (type == NUMBER && !checkNumber(data))
-    {
-        printf("Error: Number must contains only digits 0-9 and symbols +, -, (, )\n");
-        return 0;
-    }
-    int act = 0, f = 0;
-    while (act++ < book.size)
-        if (book.contacts[act].id == id)
-        {
-            f++;
-            break;
-        }
-    if (!f) printf("Error: Contact with this ID didn't found\n");
-    if (type == NAME)
-        book.contacts[act].name = data;
-    else
-        book.contacts[act].number = data;
-    rewriteBook();
-    return 1;
-}
-
-int remove(int id)
-{
-    int act = 0, f = 0;
-
-    while (act < book.size)
-    {
-        if (book.contacts[act].id == id)
-        {
-            f++;
-            break;
-        }
-        act++;
-    }
-    if (!f)
-    {
-        printf("Error: Contact with this ID didn't found\n");
-        return 0;
-    }
-    free(book.contacts[act].name);
-    free(book.contacts[act].number);
     int i;
-    for (i = act + 1; i < book.size; i++)
-        book.contacts[i - 1] = book.contacts[i];
-    book.contacts = realloc(book.contacts, --book.size * sizeof(Contact));
-    rewriteBook();
-    return 1;
+    for (i = 0; i < book.sizeBook; i++)
+        if (book.human[i].id == id) break;
+    if (i != book.sizeBook)
+    {
+        if (!strcmp(command, "name"))
+            strcpy(book.human[i].name, newData);
+        else if (!strcmp(command, "number"))
+            strcpy(book.human[i].number, newData);
+        else
+        {
+            printf("Error: Wrong data\n");
+            return;
+        }
+        rewrite();
+    }
+    return;
 }
