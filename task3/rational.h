@@ -5,10 +5,10 @@ class rational {
 private:
     int n;
     int d;
-    int gcd(int a, int b) const;
+    int gcd(int, int);
 public:
-    rational(int num, int denom);
-    rational(int num);
+    rational(int, int);
+    rational(int);
     int getNum() const;
     int getDenom() const;
     rational operator +(rational const &x) const;
