@@ -122,7 +122,7 @@ char *checkData(char *data)
 {
     int i = 0, f;
     char *newData = malloc(strlen(data) * sizeof(char));
-    if (isalpha(data[0]))
+    if (data[0] >= 'a' && data[0] <= 'z' || data[0] >= 'A' && data[0] <= 'Z')
         f = 1;
     else
         f = 0;
@@ -131,7 +131,7 @@ char *checkData(char *data)
         int j = 0;
         while (data[i] != '\0')
         {
-            if (isdigit(data[i]))
+            if (data[i] >= '0' && data[i] <= '9')
                 newData[j++] = data[i];
             i++;
         }
