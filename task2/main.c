@@ -4,7 +4,7 @@
 
 FILE *fileBook;
 const char *fileName;
-int ID;
+int ID = 0;
 
 typedef struct
 {
@@ -44,13 +44,9 @@ int main(int argc, const char *argv[])
         x.id = id, x.name = readData(fileBook), x.number = readData(fileBook);
         book.human = realloc(book.human, (book.sizeBook + 1) * sizeof(Contact));
         book.human[book.sizeBook++] = x;
+        if (id > ID) ID = id;
     }
-
-    if (book.sizeBook)
-        ID = book.human[book.sizeBook - 1].id + 1;
-    else
-        ID = 1;
-
+    ID++;
     char *command = malloc(50 * sizeof(char));
     char *data, *name, *number;
     while (scanf("%s", command) > 0)
@@ -173,7 +169,7 @@ int find(char *data)
 
 void create(char *name, char *number)
 {
-    fprintf(fileBook, "%d %s %s\n", ID + 1, name, number);
+    fprintf(fileBook, "%d %s %s\n", ID, name, number);
     Contact x;
     x.id = ID++, x.name = name, x.number = number;
     book.human = realloc(book.human, (book.sizeBook + 1) * sizeof(Contact));
