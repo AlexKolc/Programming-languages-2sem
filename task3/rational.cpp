@@ -1,18 +1,18 @@
 #include "rational.h"
 
 int rational::gcd(int a, int b) const {
-    while (a != b) 
+    while (a && b)
         if (a > b)
-            a -= b;
+            a %= b;
         else
-            b -= a;
-    return a;
+            b %= a;
+    return a + b;
 }
 
 rational::rational(int num, int denom) {
-    int temp = gcd(num, denom);
-    n = num / temp;
-    d = denom / temp;
+    int x = gcd(num, denom);
+    n = num / x;
+    d = denom / x;
 }
 
 rational::rational(int num) {
