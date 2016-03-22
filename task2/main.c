@@ -154,7 +154,7 @@ int find(char *data)
     int f = 0;
     data = checkData(data);
     int i;
-    if (isdigit(data[0]))
+    if (data[0] >= '0' && data[0] <= '9')
         for (i = 0; i < book.sizeBook; i++)
             if (!strcmp(checkData(book.human[i].number), data) && book.human[i].id)
             {
