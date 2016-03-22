@@ -1,31 +1,32 @@
 #include "rational.h"
 
-int rational::gcd(int a, int b)
-{
-    while (a && b)
+int rational::gcd(int a, int b) const {
+    while (a != b) 
         if (a > b)
-            a %= b;
+            a -= b;
         else
-            b %= a;
-    return a + b;
+            b -= a;
+    return a;
 }
 
-rational::rational(int i)
-{
-    n = i;
+rational::rational(int num, int denom) {
+    int temp = gcd(num, denom);
+    n = num / temp;
+    d = denom / temp;
+}
+
+rational::rational(int num) {
+    n = num;
     d = 1;
 }
 
-rational::rational(int num, int denom)
-{
-    int x = gcd(num, denom);
-    n = num / x;
-    d = denom / x;
+int rational::getNum() const {
+    return n;
 }
 
-int rational::getNum() const { return n; }
-
-int rational::getDenom() const { return d; }
+int rational::getDenom() const {
+    return d;
+}
 
 rational rational::operator +(rational const & x) const
 {
