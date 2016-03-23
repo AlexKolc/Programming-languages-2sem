@@ -32,12 +32,11 @@ void change(int id, char *command, char *newName);
 int main(int argc, const char *argv[])
 {
     fileName = argv[1];
-    fileBook = fopen(fileName, "a");
+    fileBook = fopen(fileName, "a+");
     book.sizeBook = 0;
-    book.human = malloc(book.sizeBook * sizeof(Contact));
-
-    int id;
+    book.human = malloc(0 * sizeof(Contact));
     rewind(fileBook);
+    int id;
     while (fscanf(fileBook, "%d", &id) == 1)
     {
         Contact x;
@@ -47,7 +46,6 @@ int main(int argc, const char *argv[])
         if (id > ID) ID = id;
     }
     ID++;
-    //printf("%d", ID);
     char *command = malloc(50 * sizeof(char));
     char *data, *name, *number;
     while (1)
@@ -61,9 +59,7 @@ int main(int argc, const char *argv[])
         else if (!strcmp(command, "create"))
         {
             name = readData(stdin);
-            //printf("&s\n", name);
             number = readData(stdin);
-            //printf("&s\n", number);
             create(name, number);
         }
         else if (!strcmp(command, "delete"))
@@ -99,7 +95,7 @@ char *readData(FILE *data)
     int i = 0, j = 0;
     while (this != ' ' && this != '\n' && this != EOF)
     {
-        if (i % 128 == 0) new = realloc(new, (j++ * 128) * sizeof(char));
+        if (i % 128 == 0) new = realloc(new, (++j * 128) * sizeof(char));
         new[i++] = this;
         this = fgetc(data);
     }
@@ -115,7 +111,7 @@ void rewrite()
     for (i = 0; i < book.sizeBook; i++)
         if (book.human[i].id)
             fprintf(fileBook, "%d %s %s\n", book.human[i].id, book.human[i].name, book.human[i].number);
-    freopen(fileName, "a", fileBook);
+    freopen(fileName, "a+", fileBook);
 }
 
 char *checkData(char *data)
