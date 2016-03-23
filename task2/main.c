@@ -47,10 +47,12 @@ int main(int argc, const char *argv[])
         if (id > ID) ID = id;
     }
     ID++;
+    //printf("%d", ID);
     char *command = malloc(50 * sizeof(char));
     char *data, *name, *number;
-    while (scanf("%s", command) > 0)
+    while (1)
     {
+        scanf("%s", command);
         if (!strcmp(command, "find"))
         {
             data = readData(stdin);
@@ -59,7 +61,9 @@ int main(int argc, const char *argv[])
         else if (!strcmp(command, "create"))
         {
             name = readData(stdin);
+            //printf("&s\n", name);
             number = readData(stdin);
+            //printf("&s\n", number);
             create(name, number);
         }
         else if (!strcmp(command, "delete"))
