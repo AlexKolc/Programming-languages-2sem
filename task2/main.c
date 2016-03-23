@@ -24,7 +24,7 @@ BookContacts book;
 char *readData(FILE *data);
 void rewrite();
 char *checkData(char *data);
-int find(char *name);
+void find(char *name);
 void create(char *name, char *number);
 void delete(int id);
 void change(int id, char *command, char *newName);
@@ -116,7 +116,7 @@ void rewrite()
 
 char *checkData(char *data)
 {
-    int i = 0, f;
+    int i = -1, f;
     char *newData = malloc(strlen(data) * sizeof(char));
     if (data[0] >= 'a' && data[0] <= 'z' || data[0] >= 'A' && data[0] <= 'Z')
         f = 1;
@@ -125,27 +125,24 @@ char *checkData(char *data)
     if (!f)
     {
         int j = 0;
-        while (data[i] != '\0')
-        {
+        while (data[++i] != '\0')
             if (data[i] >= '0' && data[i] <= '9')
                 newData[j++] = data[i];
-            i++;
-        }
         newData[j] = '\0';
     }
     else
     {
-        while (data[i] != '\0')
+        while (data[++i] != '\0')
             if (data[i] >= 'A' && data[i] <= 'Z')
-                newData[i] = (char)(data[i++] - 'A' + 'a');
+                newData[i] = (char) (data[i] - 'A' + 'a');
             else
-                newData[i] = data[i++];
+                newData[i] = data[i];
         data[i] = '\0';
     }
-    return data;
+    return newData;
 }
 
-int find(char *data)
+void find(char *data)
 {
     int f = 0;
     data = checkData(data);
@@ -153,10 +150,12 @@ int find(char *data)
     if (data[0] >= '0' && data[0] <= '9')
     {
         for (i = 0; i < book.sizeBook; i++)
+        {
             if (!strcmp(checkData(book.human[i].number), data) && book.human[i].id) {
                 printf("%d %s %s\n", book.human[i].id, book.human[i].name, book.human[i].number);
                 f = 1;
             }
+        }
     }
     else
     {
@@ -167,7 +166,6 @@ int find(char *data)
             }
     }
     if (!f) printf("Error: Didn't find data\n");
-    return 0;
 }
 
 void create(char *name, char *number)
