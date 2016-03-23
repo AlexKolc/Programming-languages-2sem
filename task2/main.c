@@ -32,7 +32,7 @@ void change(int id, char *command, char *newName);
 int main(int argc, const char *argv[])
 {
     fileName = argv[1];
-    fileBook = fopen(argv[1], "a");
+    fileBook = fopen(fileName, "a");
     book.sizeBook = 0;
     book.human = malloc(book.sizeBook * sizeof(Contact));
 
