@@ -139,25 +139,25 @@ int checkData(char *data)
             {
                 if (!bracket)
                 {
-                    printf("+Error: Wrong input name or number\n");
+                    printf("Error: Wrong input name or number\n");
                     return 0;
                 }
                 bracket = 0;
                 countBrackets++;
                 if (countBrackets > 1)
                 {
-                    printf("-Error: Wrong input name or number\n");
+                    printf("Error: Wrong input name or number\n");
                     return 0;
                 }
             }
             else if (data[i] == '-' && data[i + 1] == '\0' || data[i] != '-')
             {
-                printf("*Error: Wrong input name or number\n");
+                printf("Error: Wrong input name or number\n");
                 return 0;
             }
         if (bracket == 1)
         {
-            printf("/Error: Wrong input name or number\n");
+            printf("Error: Wrong input name or number\n");
             return 0;
         }
         newData[j] = '\0';
@@ -171,7 +171,7 @@ int checkData(char *data)
                 newData[i] = data[i];
             else
             {
-                printf("^Error: Wrong input name or number\n");
+                printf("Error: Wrong input name or number\n");
                 return 0;
             }
         newData[i] = '\0';
