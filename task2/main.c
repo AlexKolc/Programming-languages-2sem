@@ -5,6 +5,7 @@
 FILE *fileBook;
 const char *fileName;
 int ID = 0;
+char *helper;
 
 typedef struct
 {
@@ -23,7 +24,7 @@ BookContacts book;
 
 char *readData(FILE *data);
 void rewrite();
-char *checkData(char *data);
+int checkData(char *data);
 void find(char *name);
 void create(char *name, char *number);
 void delete(int id);
@@ -41,10 +42,13 @@ int main(int argc, const char *argv[])
     {
         Contact x;
         x.id = id, x.name = readData(fileBook), x.number = readData(fileBook);
+        checkData(x.name), x.name = helper;
+        checkData(x.number), x.number = helper;
         book.human = realloc(book.human, (book.sizeBook + 1) * sizeof(Contact));
         book.human[book.sizeBook++] = x;
         if (id > ID) ID = id;
     }
+    rewrite();
     ID++;
     char *command = malloc(50 * sizeof(char));
     char *data, *name, *number;
@@ -114,7 +118,7 @@ void rewrite()
     freopen(fileName, "a+", fileBook);
 }
 
-char *checkData(char *data)
+int checkData(char *data)
 {
     int i = -1, f;
     char *newData = malloc(strlen(data) * sizeof(char));
@@ -124,10 +128,38 @@ char *checkData(char *data)
         f = 0;
     if (!f)
     {
-        int j = 0;
+        int j = 0, bracket = 0, countBrackets = 0;
+        if (data[0] == '+') i++;
         while (data[++i] != '\0')
             if (data[i] >= '0' && data[i] <= '9')
                 newData[j++] = data[i];
+            else if (data[i] == '(')
+                bracket = 1;
+            else if (data[i] == ')')
+            {
+                if (!bracket)
+                {
+                    printf("+Error: Wrong input name or number\n");
+                    return 0;
+                }
+                bracket = 0;
+                countBrackets++;
+                if (countBrackets > 1)
+                {
+                    printf("-Error: Wrong input name or number\n");
+                    return 0;
+                }
+            }
+            else if (data[i] == '-' && data[i + 1] == '\0' || data[i] != '-')
+            {
+                printf("*Error: Wrong input name or number\n");
+                return 0;
+            }
+        if (bracket == 1)
+        {
+            printf("/Error: Wrong input name or number\n");
+            return 0;
+        }
         newData[j] = '\0';
     }
     else
@@ -135,23 +167,32 @@ char *checkData(char *data)
         while (data[++i] != '\0')
             if (data[i] >= 'A' && data[i] <= 'Z')
                 newData[i] = (char) (data[i] - 'A' + 'a');
-            else
+            else if  (data[i] >= 'a' && data[i] <= 'z')
                 newData[i] = data[i];
-        data[i] = '\0';
+            else
+            {
+                printf("^Error: Wrong input name or number\n");
+                return 0;
+            }
+        newData[i] = '\0';
     }
-    return newData;
+    helper = newData;
+    return 1;
 }
 
 void find(char *data)
 {
     int f = 0;
-    data = checkData(data);
+    if (!checkData(data))
+        return;
+    else
+        data = helper;
     int i;
     if (data[0] >= '0' && data[0] <= '9')
     {
         for (i = 0; i < book.sizeBook; i++)
         {
-            if (!strcmp(checkData(book.human[i].number), data) && book.human[i].id) {
+            if (!strcmp(book.human[i].number, data) && book.human[i].id) {
                 printf("%d %s %s\n", book.human[i].id, book.human[i].name, book.human[i].number);
                 f = 1;
             }
@@ -160,7 +201,7 @@ void find(char *data)
     else
     {
         for (i = 0; i < book.sizeBook; i++)
-            if (strstr(checkData(book.human[i].name), data) && book.human[i].id) {
+            if (strstr(book.human[i].name, data) && book.human[i].id) {
                 printf("%d %s %s\n", book.human[i].id, book.human[i].name, book.human[i].number);
                 f = 1;
             }
@@ -170,6 +211,14 @@ void find(char *data)
 
 void create(char *name, char *number)
 {
+    if (!checkData(name))
+        return;
+    else
+        name = helper;
+    if (!checkData(number))
+        return;
+    else
+        number = helper;
     fprintf(fileBook, "%d %s %s\n", ID, name, number);
     Contact x;
     x.id = ID++, x.name = name, x.number = number;
