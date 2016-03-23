@@ -151,18 +151,21 @@ int find(char *data)
     data = checkData(data);
     int i;
     if (data[0] >= '0' && data[0] <= '9')
+    {
         for (i = 0; i < book.sizeBook; i++)
-            if (!strcmp(checkData(book.human[i].number), data) && book.human[i].id)
-            {
+            if (!strcmp(checkData(book.human[i].number), data) && book.human[i].id) {
                 printf("%d %s %s\n", book.human[i].id, book.human[i].name, book.human[i].number);
                 f = 1;
             }
-            else
-                for (i = 0; i < book.sizeBook; i++)
-                    if (strstr(checkData(book.human[i].name), data) && book.human[i].id) {
-                        printf("%d %s %s\n", book.human[i].id, book.human[i].name, book.human[i].number);
-                        f = 1;
-                    }
+    }
+    else
+    {
+        for (i = 0; i < book.sizeBook; i++)
+            if (strstr(checkData(book.human[i].name), data) && book.human[i].id) {
+                printf("%d %s %s\n", book.human[i].id, book.human[i].name, book.human[i].number);
+                f = 1;
+            }
+    }
     if (!f) printf("Error: Didn't find data\n");
     return 0;
 }
