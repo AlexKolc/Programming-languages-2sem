@@ -60,7 +60,9 @@ std::istream &operator>>(std::istream &in, lazy_string &lstr) {
 }
 
 std::ostream &operator<<(std::ostream &out, lazy_string &lstr) {
-    for (size_t pos = lstr.first, i = 0; i < lstr.size_str; ++pos, ++i)
-        out << lstr[pos];
+    for (size_t i = 0; i < lstr.size_str; i++)
+        out << lstr[lstr.first + i];
     return out;
 }
+
+
