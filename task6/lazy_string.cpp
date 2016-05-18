@@ -6,9 +6,9 @@
 using namespace std;
 
 lazy_string::lstr_char &lazy_string::lstr_char::operator=(char c) {
-    if ((*lstr).to_lstr.use_count() > 0) {
+    if ((*lstr).to_lstr.use_count() > 1) {
         (*lstr).first = 0;
-        (*lstr).to_lstr = make_shared<string>((*lstr).to_lstr).substr((*lstr).first, (*lstr).size_lstr));
+        (*lstr).to_lstr = make_shared<string>((*lstr).to_lstr->substr((*lstr).first, (*lstr).size_lstr));
     }
     (*(*lstr).to_lstr)[(*lstr).first + pos] = c;
 }
