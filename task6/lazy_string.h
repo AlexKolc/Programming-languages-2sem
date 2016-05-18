@@ -4,13 +4,30 @@
 #include <string>
 #include <istream>
 #include <ostream>
+#include <memory> // for smart pointer
+
+using namespace std;
 
 class lazy_string {
-private:
-    size_t first, size_str;
-    std::string str;
+    struct lstr_char {
+        friend class lazy_string;
 
-    lazy_string(const lazy_string &key, size_t start, size_t size);
+        lstr_char &operator=(char c);
+
+        operator char() const;
+
+    private:
+        lstr_char(lazy_string *lstr, size_t pos);
+
+        size_t pos;
+        lazy_string * lstr;
+    };
+
+private:
+    size_t first, size_lstr;
+    shared_ptr<string> to_lstr;
+
+    lazy_string(const shared_ptr<string> lstr, size_t first_new, size_t size_new);
 
 public:
     /**
@@ -18,7 +35,7 @@ public:
      *
      * @return Object instance std::string.
      */
-    operator std::string();
+    operator string();
 
     /**
      * Construct empty lazy_string.
@@ -32,7 +49,7 @@ public:
      * @param str a std::string.
      */
 
-    lazy_string(const std::string &str);
+    lazy_string(const string &str);
 
     /**
      * Returns the length of the string.
@@ -40,12 +57,6 @@ public:
      * @return The length of the string.
      */
     size_t size() const;
-
-    /**
-     * Returns the length of the string.
-     *
-     * @return The length of the string.
-     */
 
     size_t length() const;
 
@@ -60,7 +71,7 @@ public:
      *     or empty string, if pos = size().
      */
 
-    lazy_string substr(size_t pos = 0, size_t count = std::string::npos);
+    lazy_string substr(size_t pos = 0, size_t count = string::npos);
 
     /**
      * Returns a reference to the character at pos position in the string.
@@ -68,6 +79,8 @@ public:
      * @param pos Value with the position of a character within the string.
      * @return The character at the specified position in the string.
      */
+
+    lstr_char at(size_t pos);
 
     const char &at(size_t pos) const;
 
@@ -77,6 +90,8 @@ public:
      * @param pos Value with the position of a character within the string.
      * @return The character at the specified position in the string.
      */
+
+    lstr_char operator[](size_t pos);
 
     const char &operator[](size_t pos) const;
 
@@ -89,7 +104,7 @@ public:
      * @return The same as param in.
      */
 
-    friend std::istream &operator>>(std::istream &in, lazy_string &lstr);
+    friend istream &operator>>(istream &in, lazy_string &lstr);
 
     /**
      * Inserts the sequence of characters that conforms value of lstr into out.
@@ -99,8 +114,8 @@ public:
      * @return The same as parameter out.
      */
 
-    friend std::ostream &operator<<(std::ostream &out, lazy_string &lstr);
+    friend ostream &operator<<(ostream &out, lazy_string &lstr);
 
 };
 
-#endif
+#endif //LAZY_STRING_H
