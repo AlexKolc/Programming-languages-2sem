@@ -1,9 +1,9 @@
 //
-// Created by Сашуля on 19.05.2016.
+// Created by Сашуля on 17.05.2016.
 //
 
-#ifndef TASK6_NEW_FORMAT_H
-#define TASK6_NEW_FORMAT_H
+#ifndef TASK4_FORMAT_H
+#define TASK4_FORMAT_H
 
 #include <string>
 #include <stdexcept>
@@ -544,4 +544,4 @@ namespace Format {
 } // end of namespace Format
 
 
-#endif //TASK6_NEW_FORMAT_H
+#endif //TASK4_FORMAT_H
