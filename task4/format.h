@@ -132,53 +132,54 @@ namespace Format {
         } else
             tmp += "j", tmp += _fmt.type;
         snprintf(buf, sizeof(buf), tmp.c_str(), force);
-        string r = buf;
-        if (_fmt.precision > 1024 && r.size() > 512) {
+        string outcome = buf;
+        if (_fmt.precision > 1024 && outcome.size() > 512) {
             if (_fmt.is_floating) {
-                unsigned n = _fmt.precision - r.size() + r.find_first_of('.') + 1;
+                unsigned n = _fmt.precision - outcome.size() + outcome.find_first_of('.') + 1;
                 for (unsigned i = 0; i < n; i++)
-                    r += '0';
+                    outcome += '0';
             } else {
-                unsigned n = _fmt.precision - r.size() + (r[0] == '0' ? 0 : 1);
+                unsigned n = _fmt.precision - outcome.size();
+                if (outcome[0] != '0') ++n;
                 string extra = "";
                 for (unsigned i = 0; i < n; i++)
                     extra += '0';
-                r = r.substr(0, 2) + extra + r.substr(2);
+                outcome = outcome.substr(0, 2) + extra + outcome.substr(2);
             }
         }
 
-        if ((unsigned)_fmt.width > r.size()) {
+        if ((unsigned)_fmt.width > outcome.size()) {
             if (_fmt.is_negative) {
-                unsigned n = _fmt.width - r.size();
+                unsigned n = _fmt.width - outcome.size();
                 for (unsigned i = 0; i < n; i++)
-                    r += ' ';
+                    outcome += ' ';
             }
             else {
                 if (_fmt.is_zero) {
-                    if (!r.find_first_of("+- ")) {
-                        unsigned n = _fmt.width - r.size();
+                    if (!outcome.find_first_of("+- ")) {
+                        unsigned n = _fmt.width - outcome.size();
                         string extra = "";
                         for (unsigned i = 0; i < n; i++)
                             extra += '0';
-                        r = r[0] + extra + r.substr(1);
+                        outcome = outcome[0] + extra + outcome.substr(1);
                     } else {
-                        unsigned n = _fmt.width - r.size();
+                        unsigned n = _fmt.width - outcome.size();
                         string extra = "";
                         for (unsigned i = 0; i < n; i++)
                             extra += '0';
-                        r = extra + r;
+                        outcome = extra + outcome;
                     }
                 } else {
-                    unsigned n = _fmt.width - r.size();
+                    unsigned n = _fmt.width - outcome.size();
                     string extra = "";
                     for (unsigned i = 0; i < n; i++)
                         extra += ' ';
-                    r = extra + r;
+                    outcome = extra + outcome;
                 }
             }
         }
 
-        return r;
+        return outcome;
     }
 
     template<typename In, typename... Out>
