@@ -1,36 +1,46 @@
 #include "format.h"
 
-using namespace std;
-
 namespace Format {
-    string check_specifier(const string &fmt, unsigned &pos, int flag) {
-        string outcome = "";
-        for (; pos < fmt.length();) {
-            while (pos < fmt.length() && fmt[pos] != '%') outcome += fmt[pos++];
-            if (pos == fmt.length() - 1)
-                throw invalid_argument("Format cann't be '%%'");
-            if (pos == fmt.length()) {
-                if (flag)
-                    throw invalid_argument("Format cann't have a number of arguments.(many)");
-                return outcome;
+    std::string char_seq(char c, unsigned n){
+        std::string result = "";
+        for(unsigned i = 0; i < n; i++){
+            result.push_back(c);
+	    }
+	    return result;
+    }
+
+    std::string find_spec(const std::string &fmt, unsigned &pos, bool has_arguments){
+        std::string result = "";
+        while(pos < fmt.length()){
+            for(; pos < fmt.length() && fmt[pos] != '%'; result.push_back(fmt[pos++]));
+            if(pos == fmt.length()){
+                if(has_arguments){
+                    throw std::invalid_argument("Too many arguments for format");
+                }
+                return result;
             }
-            if (fmt[pos + 1] == '%')
-                outcome += '%', pos += 2;
-            else {
+            if(pos == fmt.length() - 1){
+                throw std::invalid_argument("Spurious trailing '%%' in format");
+            }
+            if(fmt[pos + 1] == '%'){
+                result.push_back('%');
+                pos += 2;
+            } else {
                 pos++;
-                if (!flag)
-                    throw out_of_range("Format cann't have a number of arguments.(few)");
+                if(!has_arguments){
+                    throw std::out_of_range("Need more arguments");
+                }
                 break;
             }
         }
-        return outcome;
+        return result;
     }
 
-    string format_impl(const string &fmt, unsigned pos, unsigned outprint) {
-        return check_specifier(fmt, pos, 0);
+    std::string format_impl(const std::string &fmt, unsigned pos, unsigned printed){
+        return find_spec(fmt, pos, false);
     }
 
-    string nullptr_exception(nullptr_t force) {
+    std::string print_at(nullptr_t value){
         return "nullptr";
-    }
+	}
 }
