@@ -208,14 +208,14 @@ namespace Format {
             tmp += ((_fmt.is_sharp) ? "#" : "");
             tmp += ((_fmt.is_zero) ? "0" : "");
             tmp += to_string(_fmt.width);
-            return outcome +
-                   format_impl(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
+            string extra = format_impl(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
+            return outcome + extra;
+                   
         } else {
-            for (; pos < fmt.length() && isdigit(fmt[pos]); tmp += fmt[pos++]);
-            if (!tmp.empty()) {
-                _fmt.width = stoi(tmp);
-                tmp.clear();
-            }
+            while (pos < fmt.length() && isdigit(fmt[pos]))
+                tmp += fmt[pos++];
+            if (!tmp.empty()) 
+                _fmt.width = stoi(tmp), tmp.clear();
         }
 
         if (pos < fmt.length() - 1 && fmt[pos] == '.') {
@@ -231,8 +231,9 @@ namespace Format {
                 if (_fmt.width != 0) tmp += to_string(_fmt.width);
                 tmp += '.';
                 tmp += to_string(_fmt.precision);
-                return outcome +
-                       format_impl(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
+                string extra = format_impl(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
+                return outcome + extra;
+                       
             } else {
                 if (fmt[pos] == '-') {
                     _fmt.precision = -1;
@@ -484,8 +485,8 @@ namespace Format {
                 throw invalid_argument("Unknown specifier.");
                 break;
         }
-
-        return outcome + format_impl(fmt, pos, outprint + outcome.length(), args...);
+        string extra = format_impl(fmt, pos, outprint + outcome.length(), args...);
+        return outcome + extra;
     }
 }
 
