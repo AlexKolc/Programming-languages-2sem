@@ -7,13 +7,6 @@
 using namespace std;
 
 namespace Format {
-    string char_seq(char c, unsigned n) {
-        string outcome = "";
-        for (unsigned i = 0; i < n; i++)
-            outcome += c;
-        return outcome;
-    }
-
     string check_specifier(const string &fmt, unsigned &pos, bool flag) {
         string outcome = "";
         for (; pos < fmt.length();) {
