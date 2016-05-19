@@ -541,6 +541,10 @@ namespace Format {
         string extra = format_impl(fmt, pos, outprint + outcome.length(), args...);
         return outcome + extra;
     }
+    
+    template<typename... Args> string format(const string& fmt, const Args&... args){
+        return Format::format_impl(fmt, 0, 0, args...);
+    }
 } // end of namespace Format
 
 
