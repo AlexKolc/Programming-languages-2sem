@@ -90,7 +90,7 @@ namespace Format {
     }
 
     template<typename T, int pos>
-    typename enable_if<!is_convertible<T *, string>::value, string>::type nullptr_exception(const T (&a)[num]) {
+    typename enable_if<!is_convertible<T *, string>::value, string>::type nullptr_exception(const T (&a)[pos]) {
         string outcome = "[";
         for (int i = 0; i < pos - 1; i++)
             outcome += to_string(a[i]) + ", ";
