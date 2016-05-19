@@ -223,15 +223,15 @@ namespace Format {
                 string extra = format_impl(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
                 return outcome + extra;
             } else {
-                if (fmt[pos] == '-') 
+                if (fmt[pos] == '-')
                     _fmt.precision = -1, pos++;
-                else 
+                else
                     _fmt.precision = 1;
                 while (pos < fmt.length() && isdigit(fmt[pos]))
                     tmp += fmt[pos++];
                 if (!tmp.empty()) 
                     _fmt.precision *= stoi(tmp), tmp.clear();
-                else 
+                else
                     _fmt.precision = 0;
             }
         }
@@ -282,16 +282,15 @@ namespace Format {
 
         if (pos == fmt.length())
             throw invalid_argument("Uncertain end of format.");
-        if (_fmt.capacity == error) {
+        if (_fmt.capacity == error) 
             throw invalid_argument("Unknown length specifier.");
-        }
 
-        stringstream out;
-        if (_fmt.is_positive) out << showpos;
-        if (_fmt.is_negative) out << left;
-        if (_fmt.width != 0) out.width(_fmt.width);
-        if (_fmt.precision >= 0) out.precision(_fmt.precision);
-        if (_fmt.is_sharp) out << showbase << showpoint;
+        stringstream output;
+        if (_fmt.is_positive) output << showpos;
+        if (_fmt.is_negative) output << left;
+        if (_fmt.width != 0) output.width(_fmt.width);
+        if (_fmt.precision >= 0) output.precision(_fmt.precision);
+        if (_fmt.is_sharp) output << showbase << showpoint;
 
         uintmax_t u;    // unsigned type
         intmax_t d;     // integer type
@@ -415,12 +414,12 @@ namespace Format {
                     case l:
                         break;
                     case absent:
-                        out << parse<unsigned char>(force);
+                        output << parse<unsigned char>(force);
                         break;
                     default:
                         throw invalid_argument("Unknown specifier. Uncertain capacity variable.");
                 }
-                outcome += out.str();
+                outcome += output.str();
                 break;
             case 's': {
                 string str;
@@ -433,24 +432,22 @@ namespace Format {
                     default:
                         throw invalid_argument("Unknown specifier. Uncertain capacity variable.");
                 }
-                if (_fmt.precision >= 0 && str.length() > (unsigned) _fmt.precision) {
+                if (str.length() > (unsigned) _fmt.precision && _fmt.precision >= 0) 
                     str = str.substr(0, _fmt.precision);
-                }
-                out << str;
-                outcome += out.str();
+                output << str;
+                outcome += output.str();
             }
                 break;
             case 'p':
                 if (_fmt.capacity != absent)
                     throw invalid_argument("Unknown specifier. Uncertain capacity variable.");
-                out << setfill(_fmt.is_zero ? '0' : ' ');
+                output << setfill(_fmt.is_zero ? '0' : ' ');
                 snprintf(null_p, 2, "%p", parse<void *>(force));
-                if (null_p[0] != '(' && parse<void *>(force) != NULL && parse<void *>(force) != nullptr) {
-                    out << parse<void *>(force);
-                } else {
-                    out << "(nil)";
-                }
-                outcome += out.str();
+                if (null_p[0] != '(' && parse<void *>(force) != NULL && parse<void *>(force) != nullptr)
+                    output << parse<void *>(force);
+                else 
+                    output << "(nil)";
+                outcome += output.str();
                 break;
             case 'n':
                 outprint += outcome.length();
