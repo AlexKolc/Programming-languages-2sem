@@ -67,7 +67,7 @@ namespace Format {
 
     string check_specifier(const string &fmt, unsigned &pos, bool flag);
 
-    string format_impl(const string &fmt, unsigned pos, unsigned outprint);
+    string implementation(const string &fmt, unsigned pos, unsigned outprint);
 
     string nullptr_exception(nullptr_t force);
 
@@ -183,7 +183,7 @@ namespace Format {
     }
 
     template<typename In, typename... Out>
-    string format_impl(const string &fmt, unsigned pos, unsigned outprint, const In &force, const Out &... args) {
+    string implementation(const string &fmt, unsigned pos, unsigned outprint, const In &force, const Out &... args) {
         string outcome = check_specifier(fmt, pos, true);
         format_type _fmt;
         string tmp = "";
@@ -223,7 +223,7 @@ namespace Format {
             tmp += ((_fmt.is_sharp) ? "#" : "");
             tmp += ((_fmt.is_zero) ? "0" : "");
             tmp += to_string(_fmt.width);
-            string extra = format_impl(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
+            string extra = implementation(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
             return outcome + extra;
 
         } else {
@@ -245,7 +245,7 @@ namespace Format {
                 tmp += ((_fmt.is_zero) ? "0" : "");
                 if (_fmt.width != 0) tmp += to_string(_fmt.width);
                 tmp += '.' + to_string(_fmt.precision);
-                string extra = format_impl(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
+                string extra = implementation(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
                 return outcome + extra;
             } else {
                 if (fmt[pos] == '-')
@@ -512,14 +512,14 @@ namespace Format {
                 throw invalid_argument("Unknown specifier.");
                 break;
         }
-        string extra = format_impl(fmt, pos, outprint + outcome.length(), args...);
+        string extra = implementation(fmt, pos, outprint + outcome.length(), args...);
         return outcome + extra;
     }
 }
 
 template<typename... Args>
 string format(const string &fmt, const Args &... args) {
-    return Format::format_impl(fmt, 0, 0, args...);
+    return Format::implementation(fmt, 0, 0, args...);
 }
 
 #endif //TASK4_FORMAT_H
