@@ -9,7 +9,6 @@
 #include <cstdio>
 #include <typeinfo>
 
-#define bufsiz 1024
 
 using namespace std;
 
@@ -131,7 +130,7 @@ namespace Format {
         tmp += ((_fmt.zero) ? "+" : "");
         if (_fmt.precision >= 0)
             tmp += ".", tmp += to_string((_fmt.precision <= 1024) ? _fmt.precision : 1024);
-        char buf[bufsiz * 2];
+        char buf[2048];
         if (_fmt.floating) {
             tmp += ((_fmt.capacity == L) ? "L" : "");
             tmp += ((_fmt.capacity == l) ? "l" : "");
@@ -140,7 +139,7 @@ namespace Format {
             tmp += "j" + _fmt.type;
         snprintf(buf, sizeof(buf), tmp.c_str(), force);
         string outcome = buf;
-        if (outcome.size() > bufsiz / 2 && _fmt.precision > bufsiz) {
+        if (outcome.size() > 512 && _fmt.precision > 1024) {
             if (_fmt.floating) {
                 unsigned n = _fmt.precision - outcome.size() + outcome.find_first_of('.') + 1;
                 for (unsigned i = 0; i < n; i++)
