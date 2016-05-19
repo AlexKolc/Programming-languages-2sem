@@ -103,7 +103,7 @@ namespace Format {
             !is_array<T>::value && !is_convertible<T, string>::value && is_pointer<T>::value, string>::type nullptr_exception(
             T &force) {
         string outcome = "";
-        if (force == 0)
+        if (!force)
             outcome += "nullptr<" + (string) typeid(*force).name() + ">";
         else
             outcome += "ptr<" + (string) typeid(*force).name() + ">(" + format("%@", *force) + ")";
@@ -131,30 +131,26 @@ namespace Format {
             if (_fmt.capacity == L) tmp += 'L';
             if (_fmt.capacity == l) tmp += 'l';
             tmp += _fmt.type;
-        } else {
-            tmp += 'j';
-            tmp += _fmt.type;
-        }
+        } else 
+            tmp += 'j', tmp += _fmt.type;
         snprintf(buf, sizeof(buf), tmp.c_str(), force);
         string r = buf;
-        if (_fmt.precision > 1024 && r.size() > 1024 / 2) {
-            if (_fmt.is_floating) {
+        if (_fmt.precision > 1024 && r.size() > 512) {
+            if (_fmt.is_floating) 
                 r = r + char_seq('0', _fmt.precision - r.size() + r.find_first_of('.') + 1);
-            } else {
+            else 
                 r = r.substr(0, 2) + char_seq('0', _fmt.precision - r.size() + (r[0] == '0' ? 0 : 1)) + r.substr(2);
-            }
         }
 
-        if ((unsigned) _fmt.width > r.size()) {
-            if (_fmt.is_negative) {
+        if ((unsigned)_fmt.width > r.size()) {
+            if (_fmt.is_negative) 
                 r = r + char_seq(' ', _fmt.width - r.size());
-            } else {
-                if (_fmt.is_zero) {
+            else {
+                if (_fmt.is_zero) 
                     r = (r.find_first_of("+- ") == 0) ? r[0] + char_seq('0', _fmt.width - r.size()) + r.substr(1) :
                         char_seq('0', _fmt.width - r.size()) + r;
-                } else {
+                else 
                     r = char_seq(' ', _fmt.width - r.size()) + r;
-                }
             }
         }
 
