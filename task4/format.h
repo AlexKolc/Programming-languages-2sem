@@ -202,11 +202,11 @@ namespace Format {
                 _fmt.is_zero = false;
             }
             tmp = "%";
-            if (_fmt.is_positive) tmp += '+';
-            if (_fmt.is_negative) tmp += '-';
-            if (_fmt.is_space) tmp += ' ';
-            if (_fmt.is_sharp) tmp += '#';
-            if (_fmt.is_zero) tmp += '0';
+            tmp += ((_fmt.is_positive) ? "+" : "");
+            tmp += ((_fmt.is_negative) ? "-" : "");
+            tmp += ((_fmt.is_space) ? " " : "");
+            tmp += ((_fmt.is_sharp) ? "#" : "");
+            tmp += ((_fmt.is_zero) ? "0" : "");
             tmp += to_string(_fmt.width);
             return outcome +
                    format_impl(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
@@ -223,11 +223,11 @@ namespace Format {
             if (fmt[pos] == '*') {
                 _fmt.precision = parse<int>(force);
                 tmp = "%";
-                if (_fmt.is_positive) tmp += '+';
-                if (_fmt.is_negative) tmp += '-';
-                if (_fmt.is_space) tmp += ' ';
-                if (_fmt.is_sharp) tmp += '#';
-                if (_fmt.is_zero) tmp += '0';
+                tmp += ((_fmt.is_positive) ? "+" : "");
+                tmp += ((_fmt.is_negative) ? "-" : "");
+                tmp += ((_fmt.is_space) ? " " : "");
+                tmp += ((_fmt.is_sharp) ? "#" : "");
+                tmp += ((_fmt.is_zero) ? "0" : "");
                 if (_fmt.width != 0) tmp += to_string(_fmt.width);
                 tmp += '.';
                 tmp += to_string(_fmt.precision);
