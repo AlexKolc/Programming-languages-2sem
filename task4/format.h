@@ -253,22 +253,44 @@ namespace Format {
         while (pos < fmt.length() && for_check.find(fmt[pos]) != string::npos)
             switch (fmt[pos++]) {
                 case 'h':
-                    _fmt.capacity = (_fmt.capacity == h) ? hh : ((_fmt.capacity == absent) ? h : error);
+                    if (_fmt.capacity == h)
+                        _fmt.capacity = hh;
+                    else if (_fmt.capacity == absent)
+                        _fmt.capacity = h;
+                    else
+                        _fmt.capacity = error;
                     break;
                 case 'l':
-                    _fmt.capacity = (_fmt.capacity == l) ? ll : ((_fmt.capacity == absent) ? l : error);
+                    if (_fmt.capacity == l)
+                        _fmt.capacity = ll;
+                    else if (_fmt.capacity == absent)
+                        _fmt.capacity = l;
+                    else
+                        _fmt.capacity = error;
                     break;
                 case 'j':
-                    _fmt.capacity = (_fmt.capacity == absent) ? j : error;
+                    if (_fmt.capacity == absent)
+                        _fmt.capacity = j;
+                    else
+                        _fmt.capacity = error;
                     break;
                 case 'z':
-                    _fmt.capacity = (_fmt.capacity == absent) ? z : error;
+                    if (_fmt.capacity == absent)
+                        _fmt.capacity = z;
+                    else
+                        _fmt.capacity = error;
                     break;
                 case 't':
-                    _fmt.capacity = (_fmt.capacity == absent) ? t : error;
+                    if (_fmt.capacity == absent)
+                        _fmt.capacity = t;
+                    else
+                        _fmt.capacity = error;
                     break;
                 case 'L':
-                    _fmt.capacity = (_fmt.capacity == absent) ? L : error;
+                    if (_fmt.capacity == absent)
+                        _fmt.capacity = L;
+                    else
+                        _fmt.capacity = error;
                     break;
             }
 
