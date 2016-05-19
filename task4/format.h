@@ -69,8 +69,6 @@ namespace Format {
 
     string format_impl(const string &fmt, unsigned pos, unsigned outprint);
 
-    string char_seq(char c, unsigned n);
-
     string nullptr_exception(nullptr_t force);
 
     template<typename T>
@@ -136,21 +134,47 @@ namespace Format {
         snprintf(buf, sizeof(buf), tmp.c_str(), force);
         string r = buf;
         if (_fmt.precision > 1024 && r.size() > 512) {
-            if (_fmt.is_floating)
-                r = r + char_seq('0', _fmt.precision - r.size() + r.find_first_of('.') + 1);
-            else
-                r = r.substr(0, 2) + char_seq('0', _fmt.precision - r.size() + (r[0] == '0' ? 0 : 1)) + r.substr(2);
+            if (_fmt.is_floating) {
+                unsigned n = _fmt.precision - r.size() + r.find_first_of('.') + 1;
+                for (unsigned i = 0; i < n; i++)
+                    r += '0';
+            } else {
+                unsigned n = _fmt.precision - r.size() + (r[0] == '0' ? 0 : 1);
+                string extra = "";
+                for (unsigned i = 0; i < n; i++)
+                    extra += '0';
+                r = r.substr(0, 2) + extra + r.substr(2);
+            }
         }
 
         if ((unsigned)_fmt.width > r.size()) {
-            if (_fmt.is_negative)
-                r = r + char_seq(' ', _fmt.width - r.size());
+            if (_fmt.is_negative) {
+                unsigned n = _fmt.width - r.size();
+                for (unsigned i = 0; i < n; i++)
+                    r += ' '; 
+            }
             else {
-                if (_fmt.is_zero)
-                    r = (r.find_first_of("+- ") == 0) ? r[0] + char_seq('0', _fmt.width - r.size()) + r.substr(1) :
-                        char_seq('0', _fmt.width - r.size()) + r;
-                else
-                    r = char_seq(' ', _fmt.width - r.size()) + r;
+                if (_fmt.is_zero) {
+                    if (!r.find_first_of("+- ")) {
+                        unsigned n = _fmt.width - r.size();
+                        string extra = "";
+                        for (unsigned i = 0; i < n; i++)
+                            extra += '0';
+                        r = r[0] + extra + r.substr(1);
+                    } else {
+                        unsigned n = _fmt.width - r.size();
+                        string extra = "";
+                        for (unsigned i = 0; i < n; i++)
+                            extra += '0';
+                        r = extra + r;
+                    }
+                } else {
+                    unsigned n = _fmt.width - r.size();
+                    string extra = "";
+                    for (unsigned i = 0; i < n; i++)
+                        extra += '0';
+                    r = extra + r;
+                }
             }
         }
 
@@ -229,7 +253,7 @@ namespace Format {
                     _fmt.precision = 1;
                 while (pos < fmt.length() && isdigit(fmt[pos]))
                     tmp += fmt[pos++];
-                if (!tmp.empty()) 
+                if (!tmp.empty())
                     _fmt.precision *= stoi(tmp), tmp.clear();
                 else
                     _fmt.precision = 0;
@@ -282,7 +306,7 @@ namespace Format {
 
         if (pos == fmt.length())
             throw invalid_argument("Uncertain end of format.");
-        if (_fmt.capacity == error) 
+        if (_fmt.capacity == error)
             throw invalid_argument("Unknown length specifier.");
 
         stringstream output;
@@ -432,7 +456,7 @@ namespace Format {
                     default:
                         throw invalid_argument("Unknown specifier. Uncertain capacity variable.");
                 }
-                if (str.length() > (unsigned) _fmt.precision && _fmt.precision >= 0) 
+                if (str.length() > (unsigned) _fmt.precision && _fmt.precision >= 0)
                     str = str.substr(0, _fmt.precision);
                 output << str;
                 outcome += output.str();
@@ -445,7 +469,7 @@ namespace Format {
                 snprintf(null_p, 2, "%p", parse<void *>(force));
                 if (null_p[0] != '(' && parse<void *>(force) != NULL && parse<void *>(force) != nullptr)
                     output << parse<void *>(force);
-                else 
+                else
                     output << "(nil)";
                 outcome += output.str();
                 break;
