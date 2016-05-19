@@ -130,7 +130,7 @@ namespace Format {
             if (_fmt.capacity == l) tmp += 'l';
             tmp += _fmt.type;
         } else
-            tmp += 'j', tmp += _fmt.type;
+            tmp += "j" + _fmt.type;
         snprintf(buf, sizeof(buf), tmp.c_str(), force);
         string r = buf;
         if (_fmt.precision > 1024 && r.size() > 512) {
