@@ -125,15 +125,15 @@ namespace Format {
         }
 
         string tmp = "%";
-        if (_fmt.is_positive) tmp += '+';
-        if (_fmt.is_negative) tmp += '-';
-        if (_fmt.is_space) tmp += ' ';
-        if (_fmt.is_sharp) tmp += '#';
-        if (_fmt.is_zero) tmp += '0';
+        tmp += ((_fmt.is_positive) ? "+" : "");
+        tmp += ((_fmt.is_negative) ? "-" : "");
+        tmp += ((_fmt.is_space) ? " " : "");
+        tmp += ((_fmt.is_sharp) ? "#" : "");
+        tmp += ((_fmt.is_zero) ? "0" : "");
         if (_fmt.precision >= 0) tmp += '.' + to_string(_fmt.precision > 1024 ? 1024 : _fmt.precision);
         char buf[2048];
         if (_fmt.is_floating) {
-            if (_fmt.capacity == L) tmp += 'L'; 
+            if (_fmt.capacity == L) tmp += 'L';
             if (_fmt.capacity == l) tmp += 'l';
             tmp += _fmt.type;
         } else {
