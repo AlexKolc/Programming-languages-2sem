@@ -9,11 +9,7 @@
 #include <cstdio>
 #include <typeinfo>
 
-/*
- * The buffer size as used by setbuf such that it is equivalent to
- * (void) setvbuf(fileSetBuffer, caBuffer, _IOFBF, BUFSIZ).
- */
-#define BUFSIZ 1024
+#define bufsiz 1024
 
 using namespace std;
 
@@ -135,7 +131,7 @@ namespace Format {
         tmp += ((_fmt.zero) ? "+" : "");
         if (_fmt.precision >= 0)
             tmp += ".", tmp += to_string((_fmt.precision <= 1024) ? _fmt.precision : 1024);
-        char buf[BUFSIZ * 2];
+        char buf[bufsiz * 2];
         if (_fmt.floating) {
             tmp += ((_fmt.capacity == L) ? "L" : "");
             tmp += ((_fmt.capacity == l) ? "l" : "");
@@ -144,7 +140,7 @@ namespace Format {
             tmp += "j" + _fmt.type;
         snprintf(buf, sizeof(buf), tmp.c_str(), force);
         string outcome = buf;
-        if (outcome.size() > BUFSIZ / 2 && _fmt.precision > BUFSIZ) {
+        if (outcome.size() > bufsiz / 2 && _fmt.precision > bufsiz) {
             if (_fmt.floating) {
                 unsigned n = _fmt.precision - outcome.size() + outcome.find_first_of('.') + 1;
                 for (unsigned i = 0; i < n; i++)
