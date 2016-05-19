@@ -133,11 +133,13 @@ namespace Format {
         if (_fmt.precision >= 0) tmp += '.' + to_string(_fmt.precision > 1024 ? 1024 : _fmt.precision);
         char buf[2048];
         if (_fmt.is_floating) {
-            if (_fmt.capacity == L)  tmp += 'L'; 
-            if (_fmt.capacity == l)  tmp += 'l';
+            if (_fmt.capacity == L) tmp += 'L'; 
+            if (_fmt.capacity == l) tmp += 'l';
             tmp += _fmt.type;
-        } else 
-            tmp += 'j' + _fmt.type;
+        } else {
+            tmp += 'j';
+            tmp += _fmt.type;
+        }
         snprintf(buf, sizeof(buf), tmp.c_str(), force);
         string r = buf;
         if (_fmt.precision > 1024 && r.size() > 1024 / 2) {
@@ -210,8 +212,10 @@ namespace Format {
                    format_impl(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
         } else {
             for (; pos < fmt.length() && isdigit(fmt[pos]); tmp += fmt[pos++]);
-            if (!tmp.empty()) 
-                _fmt.width = stoi(tmp), tmp.clear();
+            if (!tmp.empty()) {
+                _fmt.width = stoi(tmp);
+                tmp.clear();
+            }
         }
 
         if (pos < fmt.length() - 1 && fmt[pos] == '.') {
@@ -225,7 +229,8 @@ namespace Format {
                 if (_fmt.is_sharp) tmp += '#';
                 if (_fmt.is_zero) tmp += '0';
                 if (_fmt.width != 0) tmp += to_string(_fmt.width);
-                tmp += '.' + to_string(_fmt.precision);
+                tmp += '.';
+                tmp += to_string(_fmt.precision);
                 return outcome +
                        format_impl(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
             } else {
@@ -236,10 +241,12 @@ namespace Format {
                     _fmt.precision = 1;
                 }
                 for (; pos < fmt.length() && isdigit(fmt[pos]); tmp += fmt[pos++]);
-                if (!tmp.empty()) 
-                    _fmt.precision *= stoi(tmp), tmp.clear();
-                else 
+                if (!tmp.empty()) {
+                    _fmt.precision *= stoi(tmp);
+                    tmp.clear();
+                } else {
                     _fmt.precision = 0;
+                }
             }
         }
 
