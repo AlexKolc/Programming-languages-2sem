@@ -30,7 +30,7 @@ namespace Format {
         return outcome;
     }
 
-    string format_impl(const string &fmt, unsigned pos, unsigned outprint) {
+    string implementation(const string &fmt, unsigned pos, unsigned outprint) {
         return check_specifier(fmt, pos, 0);
     }
 
