@@ -143,7 +143,7 @@ namespace Format {
         }
 
         if ((unsigned)_fmt.width > r.size()) {
-            if (_fmt.is_negative) 
+            if (_fmt.is_negative)
                 r = r + char_seq(' ', _fmt.width - r.size());
             else {
                 if (_fmt.is_zero)
@@ -219,8 +219,7 @@ namespace Format {
                 tmp += ((_fmt.is_sharp) ? "#" : "");
                 tmp += ((_fmt.is_zero) ? "0" : "");
                 if (_fmt.width != 0) tmp += to_string(_fmt.width);
-                tmp += '.';
-                tmp += to_string(_fmt.precision);
+                tmp += '.' + to_string(_fmt.precision);
                 string extra = format_impl(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
                 return outcome + extra;
 
