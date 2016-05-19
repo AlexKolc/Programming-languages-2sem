@@ -18,12 +18,7 @@ using namespace std;
 /**
  * Returns a std::string formatted with modified syntax
  *
- * @param   Modification: specifier "%@"
- *          If argument type is pointer with non-zero value, "ptr<%TYPE%>(format("%@", %VALUE%))" is printed
- *          If argument type is array, prints array content in square brackets
- *          If argument type is pointer with value 0, "ptr<%TYPE%>" is printed
- *          If argument type is nullptr_t, "nullptr" is printed
- *          If argument can be converted into string, prints this string
+ * @param   fmt
  * @param   args Arguments required by the format specifiers in the format string.
  * @throws  std::invalid_format Argument can not be converted to unknown format.
  * @throws  std::out_of_range
