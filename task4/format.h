@@ -171,9 +171,8 @@ namespace Format {
         string outcome = check_specifier(fmt, pos, true);
         format_type _fmt;
         string tmp = "";
-
-        while (pos < fmt.length() &&
-               (fmt[pos] == '-' || fmt[pos] == '+' || fmt[pos] == ' ' || fmt[pos] == '#' || fmt[pos] == '0'))
+        string for_check = "-+ #0";
+        while (pos < fmt.length() && for_check.find(fmt[pos]) != string::npos)
             switch (fmt[pos++]) {
                 case '-':
                     _fmt.is_negative = true;
@@ -210,11 +209,11 @@ namespace Format {
             tmp += to_string(_fmt.width);
             string extra = format_impl(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
             return outcome + extra;
-                   
+
         } else {
             while (pos < fmt.length() && isdigit(fmt[pos]))
                 tmp += fmt[pos++];
-            if (!tmp.empty()) 
+            if (!tmp.empty())
                 _fmt.width = stoi(tmp), tmp.clear();
         }
 
@@ -233,7 +232,7 @@ namespace Format {
                 tmp += to_string(_fmt.precision);
                 string extra = format_impl(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
                 return outcome + extra;
-                       
+
             } else {
                 if (fmt[pos] == '-') {
                     _fmt.precision = -1;
