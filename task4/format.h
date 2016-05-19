@@ -151,7 +151,7 @@ namespace Format {
             if (_fmt.is_negative) {
                 unsigned n = _fmt.width - r.size();
                 for (unsigned i = 0; i < n; i++)
-                    r += ' '; 
+                    r += ' ';
             }
             else {
                 if (_fmt.is_zero) {
@@ -172,7 +172,7 @@ namespace Format {
                     unsigned n = _fmt.width - r.size();
                     string extra = "";
                     for (unsigned i = 0; i < n; i++)
-                        extra += '0';
+                        extra += ' ';
                     r = extra + r;
                 }
             }
