@@ -6,8 +6,8 @@
 #define TASK4_FORMAT_H
 
 #include <string>
-#include <stdexcept>
 #include <sstream>
+#include <stdexcept>
 #include <cstddef>
 #include <iomanip>
 #include <cstdio>
@@ -48,13 +48,13 @@ namespace Format {
     };
 
     struct format_type {
-        int is_positive = 0,            // '+'
-                is_negative = 0,        // '-'
-                is_space = 0,           // ' '
-                is_sharp = 0,           // '#'
-                is_zero = 0,            // '0'
-                is_upcase = 0,          // flag for type register
-                is_floating = 0;        // floating point number type
+        bool is_positive = false,       // '+'
+                is_negative = false,    // '-'
+                is_space = false,       // ' '
+                is_sharp = false,       // '#'
+                is_zero = false,        // '0'
+                is_upcase = false,      // flag for type register
+                is_floating = false;    // floating point number type
         int width = 0, precision = -1;
         char type;
         enum length_format capacity = absent;
@@ -67,29 +67,30 @@ namespace Format {
 
     template<typename In, typename Out>
     typename enable_if<!is_convertible<Out, In>::value, In>::type parse(Out force) {
-        throw invalid_argument("Invalid argument type");
+        throw invalid_argument("Invalid argument type.");
     }
 
-    string check_specifier(const string &fmt, unsigned &pos, int flag);
+    string check_specifier(const string &fmt, unsigned &pos, bool flag);
 
     string format_impl(const string &fmt, unsigned pos, unsigned outprint);
+
+    string char_seq(char c, unsigned n);
 
     string nullptr_exception(nullptr_t force);
 
     template<typename T>
-    typename std::enable_if<!is_integral<T>::value && !is_convertible<T, string>::value &&
-                            !is_pointer<T>::value, string>::type outprint(const T &force) {
-        throw std::invalid_argument("Unknown argument type.");
+    typename enable_if<!is_integral<T>::value && !is_convertible<T, string>::value &&
+                       !is_pointer<T>::value, string>::type nullptr_exception(const T &force) {
+        throw invalid_argument("Invalid argument type.");
     }
 
     template<typename T>
-    typename enable_if<is_integral<T>::value, string>::type outprint(T force) {
+    typename enable_if<is_integral<T>::value, string>::type nullptr_exception(T force) {
         return to_string(force);
     }
 
     template<typename T, int pos>
-    typename enable_if<!is_convertible<T *, string>::value, string>::type outprint(
-            const T (&a)[pos]) {
+    typename enable_if<!is_convertible<T *, string>::value, string>::type nullptr_exception(const T (&a)[num]) {
         string outcome = "[";
         for (int i = 0; i < pos - 1; i++)
             outcome += to_string(a[i]) + ", ";
@@ -98,232 +99,194 @@ namespace Format {
     }
 
     template<typename T>
-    typename enable_if<is_convertible<T, string>::value, string>::type ouutprint(const T &force) {
+    typename enable_if<is_convertible<T, string>::value, string>::type nullptr_exception(const T &force) {
         return force;
     }
 
     template<typename T>
-    typename enable_if<!is_array<T>::value && !is_convertible<T, string>::value &&
-                       is_pointer<T>::value, string>::type outprint(T &force) {
+    typename enable_if<
+            !is_array<T>::value && !is_convertible<T, string>::value && is_pointer<T>::value, string>::type nullptr_exception(
+            T &force) {
+        string outcome = "";
         if (force == 0)
-            return "nullptr<" + (string) typeid(*force).name() + ">";
+            outcome += "nullptr<" + (string) typeid(*force).name() + ">";
         else
-            return "ptr<" + (string) typeid(*force).name() + ">(" + format("%@", *force) + ")";
+            outcome += "ptr<" + (string) typeid(*force).name() + ">(" + format("%@", *force) + ")";
+        return outcome;
     }
 
     template<typename T>
     typename enable_if<is_arithmetic<T>::value, string>::type outprint_num(format_type _fmt, T force) {
-        if (!_fmt.is_floating) if (_fmt.is_zero)
-            _fmt.is_zero = 0;
-        else if (_fmt.precision < 0)
-            _fmt.precision = 1;
-
-        string tmp = "%";
-        if (_fmt.is_positive) tmp.push_back('+');
-        if (_fmt.is_negative) tmp.push_back('-');
-        if (_fmt.is_space) tmp.push_back(' ');
-        if (_fmt.is_sharp) tmp.push_back('#');
-        if (_fmt.is_zero) tmp.push_back('0');
-        if (_fmt.precision >= 0) {
-            tmp.push_back('.');
-            tmp.append(to_string(_fmt.precision > 1024 ? 1024 : _fmt.precision));
+        if (!_fmt.is_floating) {
+            if (_fmt.precision < 0)
+                _fmt.precision = 1;
+            else if (_fmt.is_zero)
+                _fmt.is_zero = false;
         }
+
+        string temp = "%";
+        if (_fmt.is_positive) temp += '+';
+        if (_fmt.is_negative) temp += '-';
+        if (_fmt.is_space) temp += ' ';
+        if (_fmt.is_sharp) temp += '#';
+        if (_fmt.is_zero) temp += '0';
+        if (_fmt.precision >= 0) temp += '.' + to_string(_fmt.precision > 1024 ? 1024 : _fmt.precision);
         char buf[2048];
         if (_fmt.is_floating) {
-            if (_fmt.capacity == L) tmp += 'L';
-            if (_fmt.capacity == l) tmp += 'l';
-            tmp += _fmt.type;
-        } else
-            tmp += 'j' + _fmt.type;
-        snprintf(buf, sizeof(buf), tmp.c_str(), force);
-        string outcome = buf;
-        if (_fmt.precision > 1024 && outcome.size() > 1024 / 2) {
+            if (_fmt.capacity == L) { temp += 'L'; }
+            if (_fmt.capacity == l) { temp += 'l'; }
+            temp += _fmt.type;
+        } else {
+            temp += 'j';
+            temp += _fmt.type;
+        }
+        snprintf(buf, sizeof(buf), temp.c_str(), force);
+        string r = buf;
+        if (_fmt.precision > 1024 && r.size() > 1024 / 2) {
             if (_fmt.is_floating) {
-                unsigned n = _fmt.precision - outcome.size() + outcome.find_first_of('.') + 1;
-                for (unsigned i = 0; i < n; i++)
-                    outcome += '0';
+                r = r + char_seq('0', _fmt.precision - r.size() + r.find_first_of('.') + 1);
             } else {
-                unsigned n = _fmt.precision - outcome.size() + (outcome[0] == '0' ? 0 : 1);
-                string extra = "";
-                for (unsigned i = 0; i < n; i++)
-                    extra += '0';
-                outcome = outcome.substr(0, 2) + extra + outcome.substr(2);
+                r = r.substr(0, 2) + char_seq('0', _fmt.precision - r.size() + (r[0] == '0' ? 0 : 1)) + r.substr(2);
             }
         }
 
-        if ((unsigned) _fmt.width > outcome.size()) if (_fmt.is_negative) {
-            unsigned n = _fmt.width - outcome.size();
-            for (unsigned i = 0; i < n; i++)
-                outcome += ' ';
-        } else {
-            if (_fmt.is_zero) {
-                unsigned n = _fmt.width - outcome.size();
-                string extra = "";
-                for (unsigned i = 0; i < n; i++)
-                    extra += '0';
-                if (!outcome.find_first_of("+- "))
-                    outcome = outcome[0] + extra + outcome.substr(1);
-                else
-                    outcome = extra + outcome;
+        if ((unsigned) _fmt.width > r.size()) {
+            if (_fmt.is_negative) {
+                r = r + char_seq(' ', _fmt.width - r.size());
             } else {
-                unsigned n = _fmt.width - outcome.size();
-                string extra = "";
-                for (unsigned i = 0; i < n; i++)
-                    extra += ' ';
-                outcome = extra + outcome;
+                if (_fmt.is_zero) {
+                    r = (r.find_first_of("+- ") == 0) ? r[0] + char_seq('0', _fmt.width - r.size()) + r.substr(1) :
+                        char_seq('0', _fmt.width - r.size()) + r;
+                } else {
+                    r = char_seq(' ', _fmt.width - r.size()) + r;
+                }
             }
         }
-        return outcome;
+
+        return r;
     }
 
     template<typename In, typename... Out>
-    string format_impl(const string &fmt, unsigned pos, unsigned outprint, const In &force,
-                       const Out &... args) {
-        string outcome = check_specifier(fmt, pos, 1);
+    string format_impl(const string &fmt, unsigned pos, unsigned outprint, const In &force, const Out &... args) {
+        string outcome = check_specifier(fmt, pos, true);
         format_type _fmt;
-        string tmp = "";
-        //string for_check = "-+ #0"
+        string temp = "";
+
         while (pos < fmt.length() &&
-               (fmt[pos] == '-' || fmt[pos] == '+' || fmt[pos] == ' ' || fmt[pos] == '#' || fmt[pos] == '0')) {
+               (fmt[pos] == '-' || fmt[pos] == '+' || fmt[pos] == ' ' || fmt[pos] == '#' || fmt[pos] == '0'))
             switch (fmt[pos++]) {
                 case '-':
-                    _fmt.is_negative = 1;
-                    _fmt.is_zero = 0;
+                    _fmt.is_negative = true;
+                    _fmt.is_zero = false;
                     break;
                 case '+':
-                    _fmt.is_positive = 1;
-                    _fmt.is_space = 0;
+                    _fmt.is_positive = true;
+                    _fmt.is_space = false;
                     break;
                 case ' ':
-                    if (!_fmt.is_positive)
-                        _fmt.is_space = 1;
-                    else
-                        _fmt.is_space = 0;
+                    _fmt.is_space = !_fmt.is_positive;
                     break;
                 case '#':
-                    _fmt.is_sharp = 1;
+                    _fmt.is_sharp = true;
                     break;
                 case '0':
-                    if (!_fmt.is_negative)
-                        _fmt.is_zero = 1;
-                    else
-                        _fmt.is_zero = 0;
+                    _fmt.is_zero = !_fmt.is_negative;
                     break;
             }
-        }
 
         if (pos < fmt.length() && fmt[pos] == '*') {
             _fmt.width = parse<int>(force);
             if (_fmt.width < 0) {
                 _fmt.width *= -1;
-                _fmt.is_negative = 1;
-                _fmt.is_zero = 0;
+                _fmt.is_negative = true;
+                _fmt.is_zero = false;
             }
-            tmp = "%";
-            if (_fmt.is_positive) tmp += '+';
-            if (_fmt.is_negative) tmp += '-';
-            if (_fmt.is_space) tmp += ' ';
-            if (_fmt.is_sharp) tmp += '#';
-            if (_fmt.is_zero) tmp += '0';
-            tmp += to_string(_fmt.width);
-            string extra = format_impl(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(),
-                                       args...);
-            return outcome + extra;
+            temp = "%";
+            if (_fmt.is_positive) temp += '+';
+            if (_fmt.is_negative) temp += '-';
+            if (_fmt.is_space) temp += ' ';
+            if (_fmt.is_sharp) temp += '#';
+            if (_fmt.is_zero) temp += '0';
+            temp += to_string(_fmt.width);
+            return outcome +
+                   format_impl(temp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
         } else {
-            while (pos < fmt.length() && isdigit(fmt[pos]))
-                tmp += fmt[pos++];
-            if (!tmp.empty())
-                _fmt.width = stoi(tmp), tmp.clear();
+            for (; pos < fmt.length() && isdigit(fmt[pos]); temp += fmt[pos++]);
+            if (!temp.empty()) {
+                _fmt.width = stoi(temp);
+                temp.clear();
+            }
         }
+
         if (pos < fmt.length() - 1 && fmt[pos] == '.') {
             pos++;
             if (fmt[pos] == '*') {
                 _fmt.precision = parse<int>(force);
-                tmp = "%";
-                if (_fmt.is_positive) tmp += '+';
-                if (_fmt.is_negative) tmp += '-';
-                if (_fmt.is_space) tmp += ' ';
-                if (_fmt.is_sharp) tmp += '#';
-                if (_fmt.is_zero) tmp += '0';
-                if (_fmt.width != 0) tmp += to_string(_fmt.width);
-                tmp += '.' + to_string(_fmt.precision);
-                string extra = format_impl(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(),
-                                           args...);
-                return outcome + extra;
+                temp = "%";
+                if (_fmt.is_positive) temp += '+';
+                if (_fmt.is_negative) temp += '-';
+                if (_fmt.is_space) temp += ' ';
+                if (_fmt.is_sharp) temp += '#';
+                if (_fmt.is_zero) temp += '0';
+                if (_fmt.width != 0) temp += to_string(_fmt.width);
+                temp += '.';
+                temp += to_string(_fmt.precision);
+                return outcome +
+                       format_impl(temp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
             } else {
-                if (fmt[pos] == '-')
-                    _fmt.precision = -1, pos++;
-                else
+                if (fmt[pos] == '-') {
+                    _fmt.precision = -1;
+                    pos++;
+                } else {
                     _fmt.precision = 1;
-                while (pos < fmt.length() && isdigit(fmt[pos]))
-                    tmp += fmt[pos++];
-                if (!tmp.empty())
-                    _fmt.precision *= stoi(tmp), tmp.clear();
-                else
+                }
+                for (; pos < fmt.length() && isdigit(fmt[pos]); temp += fmt[pos++]);
+                if (!temp.empty()) {
+                    _fmt.precision *= stoi(temp);
+                    temp.clear();
+                } else {
                     _fmt.precision = 0;
+                }
             }
         }
-        // for_check
+
         while (pos < fmt.length() &&
                (fmt[pos] == 'h' || fmt[pos] == 'l' || fmt[pos] == 'j' || fmt[pos] == 'z' || fmt[pos] == 't' ||
                 fmt[pos] == 'L'))
             switch (fmt[pos++]) {
                 case 'h':
-                    if (_fmt.capacity == h)
-                        _fmt.capacity = hh;
-                    else if (_fmt.capacity == absent)
-                        _fmt.capacity = h;
-                    else
-                        _fmt.capacity = error;
+                    _fmt.capacity = (_fmt.capacity == h) ? hh : ((_fmt.capacity == absent) ? h : error);
                     break;
                 case 'l':
-                    if (_fmt.capacity == l)
-                        _fmt.capacity = ll;
-                    else if (_fmt.capacity == absent)
-                        _fmt.capacity = l;
-                    else
-                        _fmt.capacity = error;
+                    _fmt.capacity = (_fmt.capacity == l) ? ll : ((_fmt.capacity == absent) ? l : error);
                     break;
                 case 'j':
-                    if (_fmt.capacity == absent)
-                        _fmt.capacity = j;
-                    else
-                        _fmt.capacity = error;
+                    _fmt.capacity = (_fmt.capacity == absent) ? j : error;
                     break;
                 case 'z':
-                    if (_fmt.capacity == absent)
-                        _fmt.capacity = z;
-                    else
-                        _fmt.capacity = error;
+                    _fmt.capacity = (_fmt.capacity == absent) ? z : error;
                     break;
                 case 't':
-                    if (_fmt.capacity == absent)
-                        _fmt.capacity = t;
-                    else
-                        _fmt.capacity = error;
+                    _fmt.capacity = (_fmt.capacity == absent) ? t : error;
                     break;
                 case 'L':
-                    if (_fmt.capacity == absent)
-                        _fmt.capacity = L;
-                    else
-                        _fmt.capacity = error;
+                    _fmt.capacity = (_fmt.capacity == absent) ? L : error;
                     break;
             }
-        if (_fmt.capacity == error)
-            throw std::invalid_argument("Unknown length specifier");
+
         if (pos == fmt.length())
-            throw std::invalid_argument("Сonversion lacks type at end of format");
+            throw invalid_argument("Uncertain end of format.");
+        if (_fmt.capacity == error) {
+            throw invalid_argument("Unknown length specifier.");
+        }
+
         stringstream out;
-        if (_fmt.is_positive)
-            out << showpos;
-        if (_fmt.is_negative)
-            out << left;
-        if (_fmt.width != 0)
-            out.width(_fmt.width);
-        if (_fmt.precision >= 0)
-            out.precision(_fmt.precision);
-        if (_fmt.is_sharp)
-            out << showbase << showpoint;
+        if (_fmt.is_positive) out << showpos;
+        if (_fmt.is_negative) out << left;
+        if (_fmt.width != 0) out.width(_fmt.width);
+        if (_fmt.precision >= 0) out.precision(_fmt.precision);
+        if (_fmt.is_sharp) out << showbase << showpoint;
+
         uintmax_t u;    // unsigned type
         intmax_t d;     // integer type
         double f;       // float type
@@ -348,22 +311,23 @@ namespace Format {
          * | n    | recording pointer as an
          *          argument
          */
+
         _fmt.type = fmt[pos++];
         switch (_fmt.type) {
             case 'd':
             case 'i':
                 switch (_fmt.capacity) {
                     case hh:
-                        d = parse< signed char >(force);
+                        d = parse<signed char>(force);
                         break;
                     case h:
-                        d = parse< short int >(force);
+                        d = parse<short int>(force);
                         break;
                     case l:
-                        d = parse< long int >(force);
+                        d = parse<long int>(force);
                         break;
                     case ll:
-                        d = parse< long long int >(force);
+                        d = parse<long long int>(force);
                         break;
                     case j:
                         d = parse<intmax_t>(force);
@@ -383,22 +347,22 @@ namespace Format {
                 outcome += outprint_num(_fmt, d);
                 break;
             case 'X':
-                _fmt.is_upcase = 1;
+                _fmt.is_upcase = true;
             case 'x':
             case 'o':
             case 'u':
                 switch (_fmt.capacity) {
                     case hh:
-                        u = parse< unsigned char >(force);
+                        u = parse<unsigned char>(force);
                         break;
                     case h:
-                        u = parse< unsigned short int >(force);
+                        u = parse<unsigned short int>(force);
                         break;
                     case l:
-                        u = parse< unsigned long int > (force);
+                        u = parse<unsigned long int>(force);
                         break;
                     case ll:
-                        u = parse< unsigned long long int >(force);
+                        u = parse<unsigned long long int>(force);
                         break;
                     case j:
                         u = parse<uintmax_t>(force);
@@ -410,7 +374,7 @@ namespace Format {
                         u = parse<ptrdiff_t>(force);
                         break;
                     case absent:
-                        u = parse< unsigned int >(force);
+                        u = parse<unsigned int>(force);
                         break;
                     default:
                         throw invalid_argument("Unknown specifier. Uncertain capacity variable.");
@@ -420,20 +384,20 @@ namespace Format {
             case 'E':
             case 'G':
             case 'A':
-                _fmt.is_upcase = 1;
+                _fmt.is_upcase = true;
             case 'e':
             case 'g':
             case 'a':
             case 'F':
             case 'f':
-                _fmt.is_floating = 1;
+                _fmt.is_floating = true;
                 switch (_fmt.capacity) {
                     case l:
                     case absent:
                         f = parse<double>(force);
                         break;
                     case L:
-                        f = parse< long double >(force);
+                        f = parse<long double>(force);
                         break;
                     default:
                         throw invalid_argument("Unknown specifier. Uncertain capacity variable.");
@@ -445,7 +409,7 @@ namespace Format {
                     case l:
                         break;
                     case absent:
-                        out << parse< unsigned char >(force);
+                        out << parse<unsigned char>(force);
                         break;
                     default:
                         throw invalid_argument("Unknown specifier. Uncertain capacity variable.");
@@ -458,13 +422,14 @@ namespace Format {
                     case l:
                         break;
                     case absent:
-                        str = parse< string >(force);
+                        str = parse<string>(force);
                         break;
                     default:
                         throw invalid_argument("Unknown specifier. Uncertain capacity variable.");
                 }
-                if (_fmt.precision >= 0 && str.length() > (unsigned)_fmt.precision) {
+                if (_fmt.precision >= 0 && str.length() > (unsigned) _fmt.precision) {
                     str = str.substr(0, _fmt.precision);
+                }
                 out << str;
                 outcome += out.str();
             }
@@ -472,15 +437,13 @@ namespace Format {
             case 'p':
                 if (_fmt.capacity != absent)
                     throw invalid_argument("Unknown specifier. Uncertain capacity variable.");
-                if (_fmt.is_zero)
-                    out << setfill('0');
-                else
-                    out << setfill(' ');
+                out << setfill(_fmt.is_zero ? '0' : ' ');
                 snprintf(null_p, 2, "%p", parse<void *>(force));
-                if (null_p[0] != '(' && parse<void *>(force) != NULL && parse<void *>(force) != nullptr)
+                if (null_p[0] != '(' && parse<void *>(force) != NULL && parse<void *>(force) != nullptr) {
                     out << parse<void *>(force);
-                else
+                } else {
                     out << "(nil)";
+                }
                 outcome += out.str();
                 break;
             case 'n':
@@ -493,7 +456,7 @@ namespace Format {
                         *(parse<short int *>(force)) = outprint;
                         break;
                     case l:
-                        *(parse<long int *>(force)) = (long) outprint;
+                        *(parse<long int *>(force)) = outprint;
                         break;
                     case ll:
                         *(parse<long long int *>(force)) = outprint;
@@ -513,23 +476,6 @@ namespace Format {
                     default:
                         throw invalid_argument("Unknown specifier. Uncertain capacity variable.");
                 }
-                case l:
-                    break;
-                case ll:
-                    break;
-                case j:
-                    break;
-                case z:
-                    break;
-                case t:
-                    break;
-                case L:
-                    break;
-                case absent:
-                    break;
-                case error:
-                    break;
-                }
                 break;
             case '@':
                 outcome += nullptr_exception(force);
@@ -538,14 +484,14 @@ namespace Format {
                 throw invalid_argument("Unknown specifier.");
                 break;
         }
-        string extra = format_impl(fmt, pos, outprint + outcome.length(), args...);
-        return outcome + extra;
-    }
-    
-    template<typename... Args> string format(const string& fmt, const Args&... args){
-        return Format::format_impl(fmt, 0, 0, args...);
-    }
-} // end of namespace Format
 
+        return outcome + format_impl(fmt, pos, outprint + outcome.length(), args...);
+    }
+}
+
+template<typename... Args>
+string format(const string &fmt, const Args &... args) {
+    return Format::format_impl(fmt, 0, 0, args...);
+}
 
 #endif //TASK4_FORMAT_H
