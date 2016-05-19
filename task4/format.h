@@ -1,6 +1,8 @@
 #ifndef FORMAT_H
 #define FORMAT_H
 
+// http://www.cplusplus.com/reference/cstdio/printf/
+// http://en.cppreference.com/w/cpp/io/c/fprintf
 #include <string>
 #include <sstream>
 #include <stdexcept>
@@ -9,515 +11,481 @@
 #include <cstdio>
 #include <typeinfo>
 
-
-using namespace std;
-
 /**
- * Returns a std::string formatted with modified syntax
+ * Returns a std::string formatted with modified *printf syntax (see @param for details)
  *
- * @param   Modification: specifier "%@"
+ * @param   fmt
+ *          A <a href="http://cplusplus.com/printf">format string</a>
+ *          Modification: specifier "%@"
+ *          If argument type is nullptr_t, "nullptr" is printed
+ *          If argument type is pointer with value 0, "ptr<%TYPE%>" is printed
  *          If argument type is pointer with non-zero value, "ptr<%TYPE%>(format("%@", %VALUE%))" is printed
  *          If argument type is array, prints array content in square brackets
- *          If argument type is pointer with value 0, "ptr<%TYPE%>" is printed
- *          If argument type is nullptr_t, "nullptr" is printed
  *          If argument can be converted into string, prints this string
- * @param   args Arguments required by the format specifiers in the format string.
- * @throws  std::invalid_format Argument can not be converted to unknown format.
+ *          Otherwise an exception will be thrown
+ *
+ * @param   args
+ *          Arguments required by the format specifiers in the format
+ *          string. If there are more arguments than format specifiers, the
+ *          extra arguments are ignored. The number of arguments is
+ *          variable and may be zero.
+ *
+ * @throws  std::invalid_format
+ *          If a format string contains an unexpected specifier, 
+ *          an argument can not be converted to required format,
+ *          or in other illegal conditions.
+ *
  * @throws  std::out_of_range
- * @return  std::string, formatted string that used format and args.
+ *          If there are not enough arguments in args list
+ *
+ * @return  std::string, formatted using format and args
  */
-
-template<typename... Args>
-string format(const string &fmt, const Args &... args);
+ 
+template<typename... Args> std::string format(const std::string& fmt, const Args&... args);
 
 namespace Format {
-    enum length_format {
-        l,      // int or unsined int
-        hh,     // long int or unsigned long int, but -> signed char or unsigned char
-        h,      // int or unsigned int, but -> short int or unsigned short int
-        ll,     // long long int or unsigned long long int
-        j,      // intmax_t or uintmax_t
-        z,      // size_t (size ~ signed type)
-        t,      //ptrdiff_t (size ~ unsigned type)
-        L,      // __int64 or unsigned __int64
-        absent, // int or unsigned int
-        error   // if unknown length specifier
-    };
+    enum length_t {len_hh, len_h, len_default, len_l, len_ll, len_j, len_z, len_t, len_L, len_error};
 
-    struct format_type {
-        int positive = 0,           // '+'
-                negative = 0,       // '-'
-                space = 0,          // ' '
-                sharp = 0,          // '#'
-                zero = 0,           // '0'
-                is_upcase = 0,      // flag for type register
-                floating = 0;       // floating point number type
-        int width = 0, precision = -1;
+    struct format_t {
+        bool force_sign = false,
+             left_justify = false,
+             space_or_sign = false,
+             alt_num_format = false,
+             left_pad = false,
+             uppercase = false,
+             floating = false;
+        int width = 0,
+            precision = -1;
         char type;
-        enum length_format capacity = absent;
+        enum length_t length = len_default;
     };
 
-    template<typename In, typename Out>
-    typename enable_if<is_convertible<Out, In>::value, In>::type parse(Out force) {
-        return (In) force;
+    template<typename To, typename From> typename std::enable_if<std::is_convertible<From, To>::value, To>::type convert(From value){
+        return (To) value;
     }
 
-    template<typename In, typename Out>
-    typename enable_if<!is_convertible<Out, In>::value, In>::type parse(Out force) {
-        throw invalid_argument("Invalid argument type");
+    template<typename To, typename From> typename std::enable_if<!std::is_convertible<From, To>::value, To>::type convert(From value){
+        throw std::invalid_argument("Invalid argument type");
     }
 
-    string check_specifier(const string &fmt, unsigned &pos, int flag);
+    std::string find_spec(const std::string &fmt, unsigned &pos, bool has_arguments);
 
-    string format_impl(const string &fmt, unsigned pos, unsigned outprint);
+    std::string format_impl(const std::string &fmt, unsigned pos, unsigned printed);
 
-    string nullptr_exception(nullptr_t force);
+    std::string char_seq(char c, unsigned n);
 
-    template<typename T>
-    typename enable_if<!is_integral<T>::value && !is_convertible<T, string>::value &&
-                       !is_pointer<T>::value, string>::type nullptr_exception(const T &force) {
-        throw invalid_argument("Unknown argument type.");
-    }
+    std::string print_at(nullptr_t value);
 
-    template<typename T>
-    typename enable_if<is_integral<T>::value, string>::type nullptr_exception(T force) {
-        return to_string(force);
-    }
+    template<typename T> typename std::enable_if<!std::is_integral<T>::value && !std::is_convertible<T, std::string>::value && !std::is_pointer<T>::value, std::string>::type print_at(const T& value){
+        throw std::invalid_argument("Invalid argument type");
+	}
 
-    template<typename T, int pos>
-    typename enable_if<!std::is_convertible<T*, std::string>::value, string>::type nullptr_exception(
-            const T (&a)[pos]) {
-        string r = "[";
-        for (int i = 0; i < pos - 1; i++)
-            r += to_string(a[i]) + ",";
-        r += to_string(a[pos - 1]) + ']';
+	template<typename T> typename std::enable_if<std::is_integral<T>::value, std::string>::type print_at(T value){
+        return std::to_string(value);
+	}
+	
+	template<typename T, int num> typename std::enable_if<!std::is_convertible<T*, std::string>::value, std::string>::type print_at(const T (&a)[num]) {
+        std::string r = "[";
+        for(int i = 0; i < num - 1; i++){
+			r.append(std::to_string(a[i]) + ",");
+		}
+		r.append(std::to_string(a[num - 1]) + ']');
         return r;
     }
 
-    template<typename T>
-    typename enable_if<is_convertible<T, string>::value, string>::type nullptr_exception(const T &force) {
-        return force;
-    }
+    template<typename T> typename std::enable_if<std::is_convertible<T, std::string>::value, std::string>::type print_at(const T& value){
+        return value;
+	}
+    
+    template<typename T> typename std::enable_if<!std::is_array<T>::value && !std::is_convertible<T, std::string>::value && std::is_pointer<T>::value, std::string>::type print_at(T& value){
+        std::string r;
+        std::string type = typeid(*value).name();
+        if(type == "i"){
+			type = "int";
+		} else if(type == "Ss"){
+			type = "std::string";
+		}
+		if(value == 0){
+			r.append("nullptr<").append(type).append(">");
+		} else {
+		    r.append("ptr<").append(type).append(">(").append(format("%@", *value)).append(")");
+		}
+		return r;
+	}
 
-    template<typename T>
-    typename enable_if<!is_array<T>::value && !is_convertible<T, string>::value &&
-                       is_pointer<T>::value, string>::type nullptr_exception(T &force) {
-        string r;
-        string local_type = typeid(*force).name();
-        if (local_type == "i")
-            local_type = "int";
-        else if (local_type == "Ss")
-            local_type = "std::string";
-        if (!force)
-            r += "nullptr<" + local_type + '>';
-        else
-            r += "ptr<" + local_type + ">(" + format("%@", *force) + ')';
-        return r;
-    }
-
-    template<typename T>
-    typename enable_if<is_arithmetic<T>::value, string>::type print_num(format_type _fmt, T force) {
-        if (!_fmt.floating)
-            if (_fmt.precision < 0)
-                _fmt.precision = 1;
-            else if (_fmt.zero)
-                _fmt.zero = 0;
-        string tmp = "%";
-        tmp += ((_fmt.positive) ? "+" : "");
-        tmp += ((_fmt.negative) ? "+" : "");
-        tmp += ((_fmt.space) ? "+" : "");
-        tmp += ((_fmt.sharp) ? "+" : "");
-        tmp += ((_fmt.zero) ? "+" : "");
-        if (_fmt.precision >= 0)
-            tmp += ".", tmp += to_string((_fmt.precision <= 1024) ? _fmt.precision : 1024);
-        char buf[2048];
-        if (_fmt.floating) {
-            tmp += ((_fmt.capacity == L) ? "L" : "");
-            tmp += ((_fmt.capacity == l) ? "l" : "");
-            tmp += _fmt.type;
-        } else
-            tmp += "j" + _fmt.type;
-        snprintf(buf, sizeof(buf), tmp.c_str(), force);
-        string outcome = buf;
-        if (outcome.size() > 512 && _fmt.precision > 1024) {
-            if (_fmt.floating) {
-                unsigned n = _fmt.precision - outcome.size() + outcome.find_first_of('.') + 1;
-                for (unsigned i = 0; i < n; i++)
-                    outcome += '0';
-            } else {
-                unsigned n = _fmt.precision - outcome.size() + ((outcome[0] == '0') ? 0 : 1);
-                string extra = "";
-                for (unsigned i = 0; i < n; i++)
-                    extra += '0';
-                outcome = outcome.substr(0, 2) + extra + outcome.substr(2);
+    template<typename T> typename std::enable_if<std::is_arithmetic<T>::value, std::string>::type print_num(format_t fm, T value){
+        // Disclaimer:
+        // This template might not comply with *printf standarts but I hope everything is OK
+        if(!fm.floating){
+            if(fm.precision < 0){
+                fm.precision = 1;
+            } else if(fm.left_pad) {
+                fm.left_pad = false;
             }
         }
 
-        if ((unsigned) _fmt.width > outcome.size())
-            if (_fmt.negative) {
-                unsigned n = _fmt.width - outcome.size();
-                for (unsigned i = 0; i < n; i++)
-                    outcome += ' ';
+        std::string temp = "%";
+        if(fm.force_sign){temp.push_back('+');}
+        if(fm.left_justify){temp.push_back('-');}
+        if(fm.space_or_sign){temp.push_back(' ');}
+        if(fm.alt_num_format){temp.push_back('#');}
+        if(fm.left_pad){temp.push_back('0');}
+        //if(fm.width != 0){temp.append(std::to_string(fm.width > 2048 ? 2048 : fm.width));}
+        if(fm.precision >= 0){
+            temp.push_back('.');
+            temp.append(std::to_string(fm.precision > 1024 ? 1024 : fm.precision));
+        }
+        char buffer[2048];
+        if(fm.floating){
+            if(fm.length == len_L){temp.push_back('L');}
+            if(fm.length == len_l){temp.push_back('l');}
+            temp.push_back(fm.type);
+        } else { 
+            temp.push_back('j');
+            temp.push_back(fm.type);
+        }
+        snprintf(buffer, sizeof(buffer), temp.c_str(), value);
+        std::string r = buffer;
+        if(fm.precision > 1024 && r.size() > 1024 / 2){
+            if(fm.floating){
+                r = r + char_seq('0', fm.precision - r.size() + r.find_first_of('.') + 1);
             } else {
-                if (_fmt.zero)
-                    if (outcome.find_first_of("+- ") == 0) {
-                        unsigned n = _fmt.width - outcome.size();
-                        string extra = "";
-                        for (unsigned i = 0; i < n; i++)
-                            extra += '0';
-                        outcome = outcome[0] + extra + outcome.substr(1);
-                    } else {
-                        unsigned n = _fmt.width - outcome.size();
-                        string extra = "";
-                        for (unsigned i = 0; i < n; i++)
-                            extra += '0';
-                        outcome = extra + outcome;
-                    }
-                else {
-                    unsigned n = _fmt.width - outcome.size();
-                    string extra = "";
-                    for (unsigned i = 0; i < n; i++)
-                        extra += ' ';
-                    outcome = extra + outcome;
+                r = r.substr(0, 2) + char_seq('0', fm.precision - r.size() + (r[0] == '0' ? 0 : 1)) + r.substr(2);
+            }
+        }
+
+        if((unsigned) fm.width > r.size()){
+            if(fm.left_justify){
+                r = r + char_seq(' ', fm.width - r.size());
+            } else {
+                if(fm.left_pad){
+                    r = (r.find_first_of("+- ") == 0) ? r[0] + char_seq('0', fm.width - r.size()) + r.substr(1) : char_seq('0', fm.width - r.size()) + r;
+                } else {
+                    r = char_seq(' ', fm.width - r.size()) + r;
                 }
             }
-        return outcome;
+        }
+        
+        return r;
     }
 
-    template<typename First, typename... Rest>
-    string format_impl(const string &fmt, unsigned pos, unsigned outprint, const First &force,
-                       const Rest &... args) {
-        string outcome = check_specifier(fmt, pos, 1);
-        format_type _fmt;
-        string tmp = "";
-        string for_check = " -+#0";
-        while (pos < fmt.length() && for_check.find(fmt[pos]) != string::npos)
-            switch (fmt[pos++]) {
+    template<typename First, typename... Rest> std::string format_impl(const std::string& fmt, unsigned pos, unsigned printed, const First& value, const Rest&... args){
+        std::string result = find_spec(fmt, pos, true);
+        format_t fm;
+        std::string temp = "";
+
+        while(pos < fmt.length() && (fmt[pos] == '-' || fmt[pos] == '+' || fmt[pos] == ' ' || fmt[pos] == '#' || fmt[pos] == '0')){
+            switch(fmt[pos++]){
                 case '-':
-                    _fmt.negative = 1;
-                    _fmt.zero = 0;
+                    fm.left_justify = true;
+                    fm.left_pad = false;
                     break;
                 case '+':
-                    _fmt.positive = 1;
-                    _fmt.space = 0;
+                    fm.force_sign = true;
+                    fm.space_or_sign = false;
                     break;
                 case ' ':
-                    _fmt.space = !_fmt.positive;
+                    fm.space_or_sign = !fm.force_sign;
                     break;
                 case '#':
-                    _fmt.sharp = 1;
+                    fm.alt_num_format = true;
                     break;
                 case '0':
-                    _fmt.zero = !_fmt.negative;
-                    break;
-                default:
+                    fm.left_pad = !fm.left_justify;
                     break;
             }
+        }
 
-        if (pos < fmt.length() && fmt[pos] == '*') {
-            _fmt.width = parse<int>(force);
-            if (_fmt.width < 0) {
-                _fmt.width *= -1;
-                _fmt.negative = 1;
-                _fmt.zero = 0;
+        if(pos < fmt.length() && fmt[pos] == '*'){
+            fm.width = convert<int>(value);
+            if(fm.width < 0){
+                fm.width *= -1;
+                fm.left_justify = true;
+                fm.left_pad = false;
             }
-            tmp = "%";
-            tmp += ((_fmt.positive) ? "+" : "");
-            tmp += ((_fmt.negative) ? "-" : "");
-            tmp += ((_fmt.space) ? " " : "");
-            tmp += ((_fmt.sharp) ? "#" : "");
-            tmp += ((_fmt.zero) ? "0" : "");
-            tmp += to_string(_fmt.width);
-            return outcome +
-                   format_impl(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
+            temp = "%";
+            if(fm.force_sign){temp.push_back('+');}
+            if(fm.left_justify){temp.push_back('-');}
+            if(fm.space_or_sign){temp.push_back(' ');}
+            if(fm.alt_num_format){temp.push_back('#');}
+            if(fm.left_pad){temp.push_back('0');}
+            temp.append(std::to_string(fm.width));
+            return result + format_impl(temp + fmt.substr(pos + 1, std::string::npos), 0, printed + result.length(), args...);
         } else {
-            while (pos < fmt.length() && isdigit(fmt[pos]))
-                tmp += fmt[pos++];
-            if (!tmp.empty())
-                _fmt.width = stoi(tmp), tmp.clear();
-        }
-
-        if (pos < fmt.length() - 1 && fmt[pos] == '.') {
-            pos++;
-            if (fmt[pos] == '*') {
-                _fmt.precision = parse<int>(force);
-                tmp = "%";
-                tmp += ((_fmt.positive) ? "+" : "");
-                tmp += ((_fmt.negative) ? "-" : "");
-                tmp += ((_fmt.space) ? " " : "");
-                tmp += ((_fmt.sharp) ? "#" : "");
-                tmp += ((_fmt.zero) ? "0" : "");
-                if (_fmt.width != 0)
-                    tmp += to_string(_fmt.width);
-                tmp += '.';
-                tmp += to_string(_fmt.precision);
-                return outcome + format_impl(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(),
-                                            args...);
-            } else {
-                if (fmt[pos] == '-')
-                    _fmt.precision = -1, pos++;
-                else
-                    _fmt.precision = 1;
-                while (pos < fmt.length() && isdigit(fmt[pos]))
-                    tmp += fmt[pos++];
-                if (!tmp.empty())
-                    _fmt.precision *= stoi(tmp), tmp.clear();
-                else
-                    _fmt.precision = 0;
+            for(; pos < fmt.length() && isdigit(fmt[pos]); temp.push_back(fmt[pos++]));
+            if(!temp.empty()){
+                fm.width = stoi(temp);
+                temp.clear();
             }
         }
-        for_check = "h l j z t L";
-        while (pos < fmt.length() && for_check.find(fmt[pos]) != string::npos)
-            switch (fmt[pos++]) {
+
+        if(pos < fmt.length() - 1 && fmt[pos] == '.'){
+            pos++;
+            if(fmt[pos] == '*'){
+                fm.precision = convert<int>(value);
+                temp = "%";
+                if(fm.force_sign){temp.push_back('+');}
+                if(fm.left_justify){temp.push_back('-');}
+                if(fm.space_or_sign){temp.push_back(' ');}
+                if(fm.alt_num_format){temp.push_back('#');}
+                if(fm.left_pad){temp.push_back('0');}
+                if(fm.width != 0){temp.append(std::to_string(fm.width));}
+                temp.push_back('.');
+                temp.append(std::to_string(fm.precision));
+                return result + format_impl(temp + fmt.substr(pos + 1, std::string::npos), 0, printed + result.length(), args...);
+            } else {
+                if(fmt[pos] == '-'){
+                    fm.precision = -1;
+                    pos++;
+                } else {
+                    fm.precision = 1;
+                }
+                for(; pos < fmt.length() && isdigit(fmt[pos]); temp.push_back(fmt[pos++]));
+                if(!temp.empty()){
+                    fm.precision *= stoi(temp);
+                    temp.clear();
+                } else {
+                    fm.precision = 0;
+                }
+            }
+        }
+
+        while(pos < fmt.length() && (fmt[pos] == 'h' || fmt[pos] == 'l' || fmt[pos] == 'j' || fmt[pos] == 'z' || fmt[pos] == 't' || fmt[pos] == 'L')){
+            switch(fmt[pos++]){
                 case 'h':
-                    if (_fmt.capacity == h)
-                        _fmt.capacity = hh;
-                    else if (_fmt.capacity == absent)
-                        _fmt.capacity = h;
-                    else
-                        _fmt.capacity = error;
+                    fm.length = (fm.length == len_h) ? len_hh : ((fm.length == len_default) ? len_h : len_error);
                     break;
                 case 'l':
-                    if (_fmt.capacity == l)
-                        _fmt.capacity = ll;
-                    else if (_fmt.capacity == absent)
-                        _fmt.capacity = l;
-                    else
-                        _fmt.capacity = error;
+                    fm.length = (fm.length == len_l) ? len_ll : ((fm.length == len_default) ? len_l : len_error);
                     break;
                 case 'j':
-                    _fmt.capacity = (_fmt.capacity == absent) ? j : error;
+                    fm.length = (fm.length == len_default) ? len_j : len_error;
                     break;
                 case 'z':
-                    _fmt.capacity = (_fmt.capacity == absent) ? z : error;
+                    fm.length = (fm.length == len_default) ? len_z : len_error;
                     break;
                 case 't':
-                    _fmt.capacity = (_fmt.capacity == absent) ? t : error;
+                    fm.length = (fm.length == len_default) ? len_t : len_error;
                     break;
                 case 'L':
-                    _fmt.capacity = (_fmt.capacity == absent) ? L : error;
-                    break;
-                default:
+                    fm.length = (fm.length == len_default) ? len_L : len_error;
                     break;
             }
-        if (pos == fmt.length())
-            throw invalid_argument("Uncertain end of format.");
-        if (_fmt.capacity == error)
-            throw invalid_argument("Unknown length specifier.");
-        stringstream output;
-        if (_fmt.positive) output << showpos;
-        if (_fmt.negative) output << left;
-        if (_fmt.width != 0) output.width(_fmt.width);
-        if (_fmt.precision >= 0) output.precision(_fmt.precision);
-        if (_fmt.sharp) output << showbase << showpoint;
+        }
 
-        uintmax_t u;    // unsigned type
-        intmax_t d;     // integer type
-        double f;       // float type
-        char null_p[8]; // null pointer
+        if(fm.length == len_error){
+            throw std::invalid_argument("Unknown length specifier");
+        }
 
-        /**
-         * | d, i | decimal signed number       |   sizeof( int )   |
-         * | o    | octal unsigned number       |   sizeof( int )   |
-         * | u    | decimal unsigned number     |   sizeof( int )   |
-         * | x, X | hexadecimal number in the   |   sizeof( int )   |
-         *          appropriate register
-         * | f, F | floating point number       |  sizeof( double ) |
-         * | e, E | floating point number
-         *          in exponential form
-         * | g, G | floating point number
-         * | a, A | floating point number in
-         *          hexadecimal form
-         * | c    | symbol that has a code
-         * | s  S | string with '\0' symbol
-         *          at the end
-         * | p    | pointer
-         * | n    | recording pointer as an
-         *          argument
-         */
+        if(pos == fmt.length()){
+            throw std::invalid_argument("Сonversion lacks type at end of format");
+        }
 
-        _fmt.type = fmt[pos++];
-        switch (_fmt.type) {
+        std::stringstream out;
+        if(fm.force_sign){
+            out << std::showpos;
+        }
+        if(fm.left_justify){
+            out << std::left;
+        }
+        if(fm.width != 0){
+            out.width(fm.width);
+        }
+        if(fm.precision >= 0){
+            out.precision(fm.precision);
+        }
+        if(fm.alt_num_format){
+            out << std::showbase << std::showpoint;
+        }
+        // if(fm.space_or_sign){temp.push_back(' ');}
+        
+        intmax_t d;      // Integer
+        uintmax_t u;     // Unsigned
+        double f;        // Floating point
+        char nil_p[6];   // Null pointer fix
+        
+        fm.type = fmt[pos++];
+        switch(fm.type){
             case 'd':
             case 'i':
-                switch (_fmt.capacity) {
-                    case hh:
-                        d = parse< signed char >(force);
+                switch (fm.length){
+                    case len_hh:
+                        d = convert<signed char>(value);
                         break;
-                    case h:
-                        d = parse< short int >(force);
+                    case len_h:
+                        d = convert<short int>(value);
                         break;
-                    case l:
-                        d = parse< long int >(force);
+                    case len_l:
+                        d = convert<long int>(value);
                         break;
-                    case ll:
-                        d = parse< long long int >(force);
+                    case len_ll:
+                        d = convert<long long int>(value);
                         break;
-                    case j:
-                        d = parse< intmax_t >(force);
+                    case len_j:
+                        d = convert<intmax_t>(value);
                         break;
-                    case z:
-                        d = parse< size_t >(force);
+                    case len_z:
+                        d = convert<size_t>(value);
                         break;
-                    case t:
-                        d = parse< ptrdiff_t >(force);
+                    case len_t:
+                        d = convert<ptrdiff_t>(value);
                         break;
-                    case absent:
-                        d = parse< int >(force);
+                    case len_default:
+                        d = convert<int>(value);
                         break;
                     default:
-                        throw invalid_argument("Unknown specifier. Uncertain capacity variable.");
+                        throw std::invalid_argument("Unsupported length specifier");
                 }
-                outcome += print_num(_fmt, d);
+                result.append(print_num(fm, d));
                 break;
             case 'X':
-                _fmt.is_upcase = 1;
+                fm.uppercase = true;
             case 'x':
             case 'o':
             case 'u':
-                switch (_fmt.capacity) {
-                    case hh:
-                        u = parse< unsigned char >(force);
+                switch (fm.length){
+                    case len_hh:
+                        u = convert<unsigned char>(value);
                         break;
-                    case h:
-                        u = parse< unsigned short int >(force);
+                    case len_h:
+                        u = convert<unsigned short int>(value);
                         break;
-                    case l:
-                        u = parse< unsigned long int >(force);
+                    case len_l:
+                        u = convert<unsigned long int>(value);
                         break;
-                    case ll:
-                        u = parse< unsigned long long int >(force);
+                    case len_ll:
+                        u = convert<unsigned long long int>(value);
                         break;
-                    case j:
-                        u = parse< uintmax_t >(force);
+                    case len_j:
+                        u = convert<uintmax_t>(value);
                         break;
-                    case z:
-                        u = parse< size_t >(force);
+                    case len_z:
+                        u = convert<size_t>(value);
                         break;
-                    case t:
-                        u = (uintmax_t)parse< ptrdiff_t >(force);
+                    case len_t:
+                        u = convert<ptrdiff_t>(value);
                         break;
-                    case absent:
-                        u = parse < unsigned int >(force);
+                    case len_default:
+                        u = convert<unsigned int>(value);
                         break;
                     default:
-                        throw invalid_argument("Unknown specifier. Uncertain capacity variable.");
-                    case L:break;
-                    case error:break;
+                        throw std::invalid_argument("Unsupported length specifier");
                 }
-                outcome += print_num(_fmt, u);
+                result.append(print_num(fm, u));
                 break;
             case 'E':
             case 'G':
             case 'A':
-                _fmt.is_upcase = 1;
+                fm.uppercase = true;
             case 'e':
             case 'g':
             case 'a':
             case 'F':
             case 'f':
-                _fmt.floating = 1;
-                switch (_fmt.capacity) {
-                    case l:
-                    case absent:
-                        f = parse< double >(force);
+                fm.floating = true;
+                switch (fm.length){
+                    case len_l:
+                    case len_default:
+                        f = convert<double>(value);
                         break;
-                    case L:
-                        f = (double) parse< long double >(force);
+                    case len_L:
+                        f = convert<long double>(value);
                         break;
                     default:
-                        throw invalid_argument("Unknown specifier. Uncertain capacity variable.");
+                        throw std::invalid_argument("Unsupported length specifier");
                 }
-                outcome += print_num(_fmt, f);
+                result.append(print_num(fm, f));
                 break;
             case 'c':
-                switch (_fmt.capacity) {
-                    case l:
+                switch (fm.length){
+                    case len_l:
+                        // out << convert<wchar_t>(value); // FIXME Wide chars
                         break;
-                    case absent:
-                        output << parse< unsigned char >(force);
+                    case len_default:
+                        out << convert<unsigned char>(value);
                         break;
                     default:
-                        throw invalid_argument("Unknown specifier. Uncertain capacity variable.");
-                }
-                outcome += output.str();
+                        throw std::invalid_argument("Unsupported length specifier");
+                } 
+                result.append(out.str());
                 break;
             case 's': {
-                string str;
-                switch (_fmt.capacity) {
-                    case l:
+                std::string str;
+                switch (fm.length){
+                    case len_l:
+                        // str = convert<std::wstring>(value); // FIXME Wide strings
                         break;
-                    case absent:
-                        str = parse< string >(force);
+                    case len_default:
+                        str = convert<std::string>(value);
                         break;
                     default:
-                        throw invalid_argument("Unknown specifier. Uncertain capacity variable.");
+                        throw std::invalid_argument("Unsupported length specifier");
                 }
-                if (_fmt.precision >= 0 && str.length() > (unsigned)_fmt.precision)
-                    str = str.substr(0, (unsigned int)_fmt.precision);
-                output << str;
-                outcome += output.str();
-            }
+                if(fm.precision >= 0 && str.length() > (unsigned) fm.precision){
+                    str = str.substr(0, fm.precision);
+                }
+                out << str;
+                result.append(out.str());
+                }
                 break;
             case 'p':
-                if (_fmt.capacity != absent)
-                    throw invalid_argument("Unknown specifier. Uncertain capacity variable.");
-                if (_fmt.zero)
-                    output << setfill('0');
-                else
-                    output << setfill(' ');
-                snprintf(null_p, 2, "%p", parse<void *>(force));
-                if (null_p[0] != '(' && parse<void *>(force) != NULL && parse<void *>(force) != nullptr)
-                    output << parse<void *>(force);
-                else
-                    output << "(nil)";
-                outcome += output.str();
+                if(fm.length != len_default){
+                    throw std::invalid_argument("Unsupported length specifier");
+                }
+                out << std::setfill(fm.left_pad ? '0' : ' ');
+                snprintf(nil_p, 2, "%p", convert<void*>(value));
+                if(nil_p[0] != '(' && convert<void*>(value) != NULL && convert<void*>(value) != nullptr){
+                    out << convert<void*>(value);
+                } else {
+                    out << "(nil)";
+                }
+                result.append(out.str());
                 break;
             case 'n':
-                outprint += outcome.length();
-                switch (_fmt.capacity) {
-                    case hh:
-                        *(parse< signed char *>(force)) = (signed char)outprint;
+                printed += result.length();
+                switch (fm.length){
+                    case len_hh:
+                        *(convert<signed char*>(value)) = printed;
                         break;
-                    case h:
-                        *(parse< short int *>(force)) = (short)outprint;
+                    case len_h:
+                        *(convert<short int*>(value)) = printed;
                         break;
-                    case l:
-                        *(parse< long int *>(force)) = (long)outprint;
+                    case len_l:
+                        *(convert<long int*>(value)) = printed;
                         break;
-                    case ll:
-                        *(parse< long long int *>(force)) = outprint;
+                    case len_ll:
+                        *(convert<long long int*>(value)) = printed;
                         break;
-                    case j:
-                        *(parse< intmax_t *>(force)) = outprint;
+                    case len_j:
+                        *(convert<intmax_t*>(value)) = printed;
                         break;
-                    case z:
-                        *(parse< size_t *>(force)) = outprint;
+                    case len_z:
+                        *(convert<size_t*>(value)) = printed;
                         break;
-                    case t:
-                        *(parse< ptrdiff_t *>(force)) = outprint;
+                    case len_t:
+                        *(convert<ptrdiff_t*>(value)) = printed;
                         break;
-                    case absent:
-                        *(parse< int *>(force)) = outprint;
+                    case len_default:
+                        *(convert<int*>(value)) = printed;
                         break;
                     default:
-                        throw invalid_argument("Unknown specifier. Uncertain capacity variable.");
+                        throw std::invalid_argument("Unsupported length specifier");
                 }
                 break;
             case '@':
-                outcome += nullptr_exception(force);
+                result.append(print_at(value));
                 break;
             default:
-                throw invalid_argument("Unknown specifier.");
+                throw std::invalid_argument("Unknown format specifier: '" + fmt[pos] + '\'');
+                break;
         }
-
-        return outcome + format_impl(fmt, pos, outprint + outcome.length(), args...);
+        
+        return result + format_impl(fmt, pos, printed + result.length(), args...);
     }
 }
-
-template<typename... Args>
-string format(const string &fmt, const Args &... args) {
-    return Format::format_impl(fmt, 0, 0, args...);
+ 
+template<typename... Args> std::string format(const std::string& fmt, const Args&... args){
+	return Format::format_impl(fmt, 0, 0, args...);
 }
 
-#endif //FORMAT_H
+#endif
