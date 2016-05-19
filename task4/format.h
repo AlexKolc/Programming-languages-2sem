@@ -249,10 +249,8 @@ namespace Format {
                 }
             }
         }
-
-        while (pos < fmt.length() &&
-               (fmt[pos] == 'h' || fmt[pos] == 'l' || fmt[pos] == 'j' || fmt[pos] == 'z' || fmt[pos] == 't' ||
-                fmt[pos] == 'L'))
+        for_check = "hljztL";
+        while (pos < fmt.length() && for_check.find(fmt[pos]) != string::npos)
             switch (fmt[pos++]) {
                 case 'h':
                     _fmt.capacity = (_fmt.capacity == h) ? hh : ((_fmt.capacity == absent) ? h : error);
