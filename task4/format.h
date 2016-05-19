@@ -124,23 +124,21 @@ namespace Format {
                 _fmt.is_zero = false;
         }
 
-        string temp = "%";
-        if (_fmt.is_positive) temp += '+';
-        if (_fmt.is_negative) temp += '-';
-        if (_fmt.is_space) temp += ' ';
-        if (_fmt.is_sharp) temp += '#';
-        if (_fmt.is_zero) temp += '0';
-        if (_fmt.precision >= 0) temp += '.' + to_string(_fmt.precision > 1024 ? 1024 : _fmt.precision);
+        string tmp = "%";
+        if (_fmt.is_positive) tmp += '+';
+        if (_fmt.is_negative) tmp += '-';
+        if (_fmt.is_space) tmp += ' ';
+        if (_fmt.is_sharp) tmp += '#';
+        if (_fmt.is_zero) tmp += '0';
+        if (_fmt.precision >= 0) tmp += '.' + to_string(_fmt.precision > 1024 ? 1024 : _fmt.precision);
         char buf[2048];
         if (_fmt.is_floating) {
-            if (_fmt.capacity == L) { temp += 'L'; }
-            if (_fmt.capacity == l) { temp += 'l'; }
-            temp += _fmt.type;
-        } else {
-            temp += 'j';
-            temp += _fmt.type;
-        }
-        snprintf(buf, sizeof(buf), temp.c_str(), force);
+            if (_fmt.capacity == L)  tmp += 'L'; 
+            if (_fmt.capacity == l)  tmp += 'l';
+            tmp += _fmt.type;
+        } else 
+            tmp += 'j' + _fmt.type;
+        snprintf(buf, sizeof(buf), tmp.c_str(), force);
         string r = buf;
         if (_fmt.precision > 1024 && r.size() > 1024 / 2) {
             if (_fmt.is_floating) {
@@ -170,7 +168,7 @@ namespace Format {
     string format_impl(const string &fmt, unsigned pos, unsigned outprint, const In &force, const Out &... args) {
         string outcome = check_specifier(fmt, pos, true);
         format_type _fmt;
-        string temp = "";
+        string tmp = "";
 
         while (pos < fmt.length() &&
                (fmt[pos] == '-' || fmt[pos] == '+' || fmt[pos] == ' ' || fmt[pos] == '#' || fmt[pos] == '0'))
@@ -201,38 +199,35 @@ namespace Format {
                 _fmt.is_negative = true;
                 _fmt.is_zero = false;
             }
-            temp = "%";
-            if (_fmt.is_positive) temp += '+';
-            if (_fmt.is_negative) temp += '-';
-            if (_fmt.is_space) temp += ' ';
-            if (_fmt.is_sharp) temp += '#';
-            if (_fmt.is_zero) temp += '0';
-            temp += to_string(_fmt.width);
+            tmp = "%";
+            if (_fmt.is_positive) tmp += '+';
+            if (_fmt.is_negative) tmp += '-';
+            if (_fmt.is_space) tmp += ' ';
+            if (_fmt.is_sharp) tmp += '#';
+            if (_fmt.is_zero) tmp += '0';
+            tmp += to_string(_fmt.width);
             return outcome +
-                   format_impl(temp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
+                   format_impl(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
         } else {
-            for (; pos < fmt.length() && isdigit(fmt[pos]); temp += fmt[pos++]);
-            if (!temp.empty()) {
-                _fmt.width = stoi(temp);
-                temp.clear();
-            }
+            for (; pos < fmt.length() && isdigit(fmt[pos]); tmp += fmt[pos++]);
+            if (!tmp.empty()) 
+                _fmt.width = stoi(tmp), tmp.clear();
         }
 
         if (pos < fmt.length() - 1 && fmt[pos] == '.') {
             pos++;
             if (fmt[pos] == '*') {
                 _fmt.precision = parse<int>(force);
-                temp = "%";
-                if (_fmt.is_positive) temp += '+';
-                if (_fmt.is_negative) temp += '-';
-                if (_fmt.is_space) temp += ' ';
-                if (_fmt.is_sharp) temp += '#';
-                if (_fmt.is_zero) temp += '0';
-                if (_fmt.width != 0) temp += to_string(_fmt.width);
-                temp += '.';
-                temp += to_string(_fmt.precision);
+                tmp = "%";
+                if (_fmt.is_positive) tmp += '+';
+                if (_fmt.is_negative) tmp += '-';
+                if (_fmt.is_space) tmp += ' ';
+                if (_fmt.is_sharp) tmp += '#';
+                if (_fmt.is_zero) tmp += '0';
+                if (_fmt.width != 0) tmp += to_string(_fmt.width);
+                tmp += '.' + to_string(_fmt.precision);
                 return outcome +
-                       format_impl(temp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
+                       format_impl(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
             } else {
                 if (fmt[pos] == '-') {
                     _fmt.precision = -1;
@@ -240,13 +235,11 @@ namespace Format {
                 } else {
                     _fmt.precision = 1;
                 }
-                for (; pos < fmt.length() && isdigit(fmt[pos]); temp += fmt[pos++]);
-                if (!temp.empty()) {
-                    _fmt.precision *= stoi(temp);
-                    temp.clear();
-                } else {
+                for (; pos < fmt.length() && isdigit(fmt[pos]); tmp += fmt[pos++]);
+                if (!tmp.empty()) 
+                    _fmt.precision *= stoi(tmp), tmp.clear();
+                else 
                     _fmt.precision = 0;
-                }
             }
         }
 
