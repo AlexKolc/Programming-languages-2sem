@@ -1,3 +1,7 @@
+//
+// Created by Сашуля on 19.05.2016.
+//
+
 #include "format.h"
 
 using namespace std;
@@ -34,3 +38,4 @@ namespace Format {
         return "nullptr";
     }
 }
+
