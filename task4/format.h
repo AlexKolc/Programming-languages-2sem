@@ -222,21 +222,17 @@ namespace Format {
                 tmp += '.' + to_string(_fmt.precision);
                 string extra = format_impl(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
                 return outcome + extra;
-
             } else {
-                if (fmt[pos] == '-') {
-                    _fmt.precision = -1;
-                    pos++;
-                } else {
+                if (fmt[pos] == '-') 
+                    _fmt.precision = -1, pos++;
+                else 
                     _fmt.precision = 1;
-                }
-                for (; pos < fmt.length() && isdigit(fmt[pos]); tmp += fmt[pos++]);
-                if (!tmp.empty()) {
-                    _fmt.precision *= stoi(tmp);
-                    tmp.clear();
-                } else {
+                while (pos < fmt.length() && isdigit(fmt[pos]))
+                    tmp += fmt[pos++];
+                if (!tmp.empty()) 
+                    _fmt.precision *= stoi(tmp), tmp.clear();
+                else 
                     _fmt.precision = 0;
-                }
             }
         }
         for_check = "hljztL";
