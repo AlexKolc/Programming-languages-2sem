@@ -98,7 +98,8 @@ namespace Format {
 
     template<typename T>
     typename enable_if<
-            !is_array<T>::value && !is_convertible<T, string>::value && is_pointer<T>::value, string>::type nullptr_exception(
+            !is_array<T>::value && !is_convertible<T, string>::value &&
+            is_pointer<T>::value, string>::type nullptr_exception(
             T &force) {
         string outcome = "";
         if (!force)
@@ -148,7 +149,7 @@ namespace Format {
             }
         }
 
-        if ((unsigned)_fmt.width > outcome.size()) {
+        if ((unsigned) _fmt.width > outcome.size()) {
             if (_fmt.is_negative) {
                 unsigned n = _fmt.width - outcome.size();
                 for (unsigned i = 0; i < n; i++)
@@ -223,7 +224,8 @@ namespace Format {
             tmp += ((_fmt.is_sharp) ? "#" : "");
             tmp += ((_fmt.is_zero) ? "0" : "");
             tmp += to_string(_fmt.width);
-            string extra = implementation(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
+            string extra = implementation(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(),
+                                          args...);
             return outcome + extra;
 
         } else {
@@ -245,7 +247,8 @@ namespace Format {
                 tmp += ((_fmt.is_zero) ? "0" : "");
                 if (_fmt.width != 0) tmp += to_string(_fmt.width);
                 tmp += '.' + to_string(_fmt.precision);
-                string extra = implementation(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(), args...);
+                string extra = implementation(tmp + fmt.substr(pos + 1, string::npos), 0, outprint + outcome.length(),
+                                              args...);
                 return outcome + extra;
             } else {
                 if (fmt[pos] == '-')
